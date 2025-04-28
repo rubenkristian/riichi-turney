@@ -21,6 +21,15 @@ type DiscordSetting struct {
 type CommandResponse struct {
 }
 
+type DiscordStatusResponse struct {
+	Status    bool  `json:"status"`
+	StartTime int64 `json:"start_time"`
+}
+
+type CreateResponse struct {
+	Status bool `json:"status"`
+}
+
 func CreateClient(dbGame *database.DatabaseGame, riichiCommand *riichicommand.RiichiApi, discordbot *discordbot.DiscordBot) *ClientInterface {
 	return &ClientInterface{
 		dbGame:        dbGame,
@@ -64,4 +73,47 @@ func (ci *ClientInterface) EndDiscordBot(c *fiber.Ctx) error {
 	}
 
 	return utils.ResponseSuccess(200, "success", CommandResponse{})(c)
+}
+
+func (ci *ClientInterface) CheckStatusDiscordBot(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", DiscordStatusResponse{
+		Status:    ci.discordbot.IsRunning,
+		StartTime: ci.discordbot.StartTime,
+	})(c)
+}
+
+func (ci *ClientInterface) CreatePlayer(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) UpdatePlayer(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) DeletePlayer(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) ViewPlayer(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) CreateHanchan(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) CreateTable(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) UpdateTable(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) StartTable(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
+}
+
+func (ci *ClientInterface) CheckTable(c *fiber.Ctx) error {
+	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
 }

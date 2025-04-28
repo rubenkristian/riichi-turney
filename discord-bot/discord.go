@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
@@ -24,6 +25,7 @@ type DiscordBot struct {
 	DbGame        *database.DatabaseGame
 	RiichiCommand *riichicommand.RiichiApi
 	IsRunning     bool
+	StartTime     int64
 }
 
 func CreateDiscordBot(dbGame *database.DatabaseGame, riichiCommand *riichicommand.RiichiApi) *DiscordBot {
@@ -66,6 +68,7 @@ func (db *DiscordBot) StartBot(token string) error {
 
 	db.Client = client
 	db.IsRunning = true
+	db.StartTime = time.Now().UnixMilli()
 
 	return nil
 }
@@ -77,6 +80,7 @@ func (db *DiscordBot) EndBot() error {
 
 	db.Client.Close(context.Background())
 	db.IsRunning = false
+	db.StartTime = 0
 
 	return nil
 }
