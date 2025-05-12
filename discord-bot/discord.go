@@ -8,15 +8,18 @@ import (
 
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
+	"github.com/disgoorg/snowflake/v2"
 	"github.com/rubenkristian/riichi-turney/database"
 	riichicommand "github.com/rubenkristian/riichi-turney/riichi-command"
 )
 
 type DiscordSetting struct {
-	Token   string
-	AdminId []string
+	Token    string
+	AdminId  []string
+	ServerId string
 }
 
 type DiscordBot struct {
@@ -36,12 +39,13 @@ func CreateDiscordBot(dbGame *database.DatabaseGame, riichiCommand *riichicomman
 	}
 }
 
-func (db *DiscordBot) StartBot(token string) error {
+func (db *DiscordBot) StartBot(token string, serverId string) error {
 	if db.IsRunning {
 		return fmt.Errorf("discord bot already running")
 	}
 
 	db.Setting.Token = token
+	db.Setting.ServerId = serverId
 
 	client, err := disgo.New(
 		db.Setting.Token,
@@ -51,10 +55,61 @@ func (db *DiscordBot) StartBot(token string) error {
 				gateway.IntentMessageContent,
 			),
 		),
-		bot.WithEventListenerFunc(db.onMessageCreate),
 	)
 
+	client.AddEventListeners(bot.NewListenerFunc(db.onMessageInteract))
+	client.AddEventListeners(bot.NewListenerFunc(db.onEventInteract))
+	client.AddEventListeners(bot.NewListenerFunc(db.onComponentInteract))
+
 	if err != nil {
+		return err
+	}
+
+	commands := []discord.ApplicationCommandCreate{
+		discord.SlashCommandCreate{
+			Name:        "register",
+			Description: "register turney",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:        "riichi_city_id",
+					Description: "Id user riichi city",
+					Required:    true,
+				},
+			},
+		},
+		discord.SlashCommandCreate{
+			Name:        "start-table",
+			Description: "start table with number of table",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:        "table_id",
+					Description: "id of table active",
+					Required:    true,
+				},
+			},
+		},
+		discord.SlashCommandCreate{
+			Name:        "check-table",
+			Description: "check table (all or one)",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:        "table_id",
+					Description: "id of table active",
+					Required:    false,
+				},
+			},
+		},
+		discord.SlashCommandCreate{
+			Name:        "schedule-time",
+			Description: "get detail schedule time",
+		},
+		discord.SlashCommandCreate{
+			Name:        "check-point",
+			Description: "check point of player for current turney",
+		},
+	}
+
+	if _, err := client.Rest().SetGuildCommands(client.ApplicationID(), snowflake.MustParse(db.Setting.ServerId), commands); err != nil {
 		return err
 	}
 
@@ -85,14 +140,40 @@ func (db *DiscordBot) EndBot() error {
 	return nil
 }
 
-func (db *DiscordBot) onMessageCreate(event *events.MessageCreate) {
+func (db *DiscordBot) onMessageInteract(event *events.MessageCreate) {
 	if event.Message.Author.Bot {
 		return
 	}
 
-	fmt.Println(event.Message.Content)
-
 	event.Client().Rest().AddReaction(event.ChannelID, event.MessageID, "✅")
+}
+
+func (db *DiscordBot) onEventInteract(event *events.ApplicationCommandInteractionCreate) {
+	data := event.SlashCommandInteractionData()
+
+	if data.CommandName() == "register" {
+		db.EventRegister(event)
+	}
+
+	if data.CommandName() == "start-table" {
+		db.EventStartTable(event)
+	}
+
+	if data.CommandName() == "check-table" {
+		db.EventCheckTable(event)
+	}
+
+	if data.CommandName() == "schedule-time" {
+		db.EventCheckSchedule(event)
+	}
+
+	if data.CommandName() == "check-point" {
+		db.EventCheckPoint(event)
+	}
+}
+
+func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCreate) {
+
 }
 
 func (db *DiscordBot) GetToken() string {

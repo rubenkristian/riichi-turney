@@ -15,7 +15,14 @@ type ClientInterface struct {
 }
 
 type DiscordSetting struct {
-	Token string `json:"token"`
+	Token    string `json:"token"`
+	ServerId string `json:"server"`
+}
+
+type RiichiCitySetting struct {
+	Domain   string `json:"domain"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type CommandResponse struct {
@@ -47,10 +54,24 @@ func (ci *ClientInterface) UpdateSetting(c *fiber.Ctx) error {
 }
 
 func (ci *ClientInterface) StartRiichiBot(c *fiber.Ctx) error {
+	riichiCitySetting := new(RiichiCitySetting)
+
+	if err := c.BodyParser(riichiCitySetting); err != nil {
+		return utils.ResponseError(fiber.StatusBadRequest, "Bad Request", err)(c)
+	}
+
+	if err := ci.riichiCommand.SetupRiichi(riichiCitySetting.Domain, riichiCitySetting.Username, riichiCitySetting.Password); err != nil {
+		return utils.ResponseError(fiber.StatusInternalServerError, "Some think went wrong", err)(c)
+	}
+
 	return utils.ResponseSuccess(200, "success", CommandResponse{})(c)
 }
 
 func (ci *ClientInterface) EndRiichiBot(c *fiber.Ctx) error {
+	if !ci.riichiCommand.IsLoggedIn {
+		return utils.ResponseError(fiber.StatusInternalServerError, "Riichi Bot already end", nil)(c)
+	}
+
 	return utils.ResponseSuccess(200, "success", CommandResponse{})(c)
 }
 
@@ -61,9 +82,10 @@ func (ci *ClientInterface) StartDiscordBot(c *fiber.Ctx) error {
 		return utils.ResponseError(fiber.StatusBadRequest, "Bad Request", err)(c)
 	}
 
-	if err := ci.discordbot.StartBot(discordSetting.Token); err != nil {
+	if err := ci.discordbot.StartBot(discordSetting.Token, discordSetting.ServerId); err != nil {
 		return utils.ResponseError(fiber.StatusInternalServerError, "Some think went wrong", err)(c)
 	}
+
 	return utils.ResponseSuccess(200, "success", CommandResponse{})(c)
 }
 

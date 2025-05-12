@@ -16,15 +16,15 @@ import (
 )
 
 type RiichiApi struct {
-	deviceId      string
-	domain        string
-	sid           string
-	uid           string
-	version       string
-	defaultHeader map[string]string
-	credential    Credential
-	isLoggedIn    bool
-	dbGame        *database.DatabaseGame
+	DeviceId      string
+	Domain        string
+	Sid           string
+	Uid           string
+	Version       string
+	DefaultHeader map[string]string
+	Credential    Credential
+	IsLoggedIn    bool
+	DbGame        *database.DatabaseGame
 }
 
 type SIDResponse struct {
@@ -32,7 +32,7 @@ type SIDResponse struct {
 
 func CreateRiichiApi(dbGame *database.DatabaseGame) *RiichiApi {
 	return &RiichiApi{
-		dbGame: dbGame,
+		DbGame: dbGame,
 	}
 }
 
@@ -43,9 +43,9 @@ func (ra *RiichiApi) SetupRiichi(mainHost string, email string, password string)
 		return err
 	}
 
-	ra.domain = domain
+	ra.Domain = domain
 	hash := md5.Sum([]byte(password))
-	ra.credential = Credential{
+	ra.Credential = Credential{
 		Email:    email,
 		Password: hex.EncodeToString(hash[:]),
 	}
@@ -95,22 +95,29 @@ func (ra *RiichiApi) login() error {
 		return err
 	}
 
-	ra.sid = sid
-	ra.uid = uid
-	ra.isLoggedIn = true
+	ra.Sid = sid
+	ra.Uid = uid
+	ra.IsLoggedIn = true
 	ra.refreshHeader()
 
 	return nil
 }
 
+func (ra *RiichiApi) logout() {
+	ra.Sid = ""
+	ra.Uid = ""
+	ra.IsLoggedIn = false
+	ra.refreshHeader()
+}
+
 func (ra *RiichiApi) fetchSID() (string, error) {
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/users/initSession", ra.domain), nil)
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/users/initSession", ra.Domain), nil)
 
 	if err != nil {
 		return "", err
 	}
 
-	req.Header.Add("Cookies", fmt.Sprintf(`{"channel":"default","deviceid":"%s","lang":"en","version":"%s","platform":"pc"}`, ra.deviceId, ra.version))
+	req.Header.Add("Cookies", fmt.Sprintf(`{"channel":"default","deviceid":"%s","lang":"en","version":"%s","platform":"pc"}`, ra.DeviceId, ra.Version))
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -130,19 +137,19 @@ func (ra *RiichiApi) fetchSID() (string, error) {
 }
 
 func (ra *RiichiApi) fetchLogin() (string, error) {
-	credential, err := json.MarshalIndent(ra.credential, "", " ")
+	credential, err := json.MarshalIndent(ra.Credential, "", " ")
 
 	if err != nil {
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/users/emailLogin", ra.domain), bytes.NewBuffer(credential))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/users/emailLogin", ra.Domain), bytes.NewBuffer(credential))
 
 	if err != nil {
 		return "", err
 	}
 
-	req.Header.Add("Cookies", fmt.Sprintf(`{"channel":"default","deviceid":"%s","lang":"en","sid":"%s","version":"%s","platform":"pc"}`, ra.deviceId, ra.sid, ra.version))
+	req.Header.Add("Cookies", fmt.Sprintf(`{"channel":"default","deviceid":"%s","lang":"en","sid":"%s","version":"%s","platform":"pc"}`, ra.DeviceId, ra.Sid, ra.Version))
 	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -173,9 +180,9 @@ func (ra *RiichiApi) fetchLogin() (string, error) {
 }
 
 func (ra *RiichiApi) refreshHeader() {
-	ra.defaultHeader = map[string]string{
+	ra.DefaultHeader = map[string]string{
 		"User-Agent":      "UnityPlayer/2020.3.42f1c1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)",
-		"Cookies":         fmt.Sprintf(`{"channel":"default","lang":"en","deviceid":"%s","sid":"%s","uid":%s,"region":"cn","platform":"pc","version":"%s"}`, ra.deviceId, ra.sid, ra.uid, ra.version),
+		"Cookies":         fmt.Sprintf(`{"channel":"default","lang":"en","deviceid":"%s","sid":"%s","uid":%s,"region":"cn","platform":"pc","version":"%s"}`, ra.DeviceId, ra.Sid, ra.Uid, ra.Version),
 		"Content-Type":    "application/json",
 		"Accept":          "application/json",
 		"X-Unity-Version": "2021.3.38f1",
@@ -183,7 +190,7 @@ func (ra *RiichiApi) refreshHeader() {
 }
 
 func (ra *RiichiApi) FetchTournamentInfo(turneyId int) (*TournamentInfo, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
 
@@ -195,13 +202,13 @@ func (ra *RiichiApi) FetchTournamentInfo(turneyId int) (*TournamentInfo, error) 
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/enterSelfBuild", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/enterSelfBuild", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -223,7 +230,7 @@ func (ra *RiichiApi) FetchTournamentInfo(turneyId int) (*TournamentInfo, error) 
 }
 
 func (ra *RiichiApi) UpdateTournamentInfo(turneyId int, tournamentSetting TournamentSetting) (bool, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return false, fmt.Errorf("failed to update tournament info, you're not login yet")
 	}
 
@@ -236,13 +243,13 @@ func (ra *RiichiApi) UpdateTournamentInfo(turneyId int, tournamentSetting Tourna
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/changeSelfCfg", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/changeSelfCfg", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return false, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -259,7 +266,7 @@ func (ra *RiichiApi) UpdateTournamentInfo(turneyId int, tournamentSetting Tourna
 }
 
 func (ra *RiichiApi) FetchTournamentLogList(classifyId string, lastId int) ([]TournamentLogList, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
 
@@ -277,13 +284,13 @@ func (ra *RiichiApi) FetchTournamentLogList(classifyId string, lastId int) ([]To
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/readPaiPuList", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/readPaiPuList", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -305,7 +312,7 @@ func (ra *RiichiApi) FetchTournamentLogList(classifyId string, lastId int) ([]To
 }
 
 func (ra *RiichiApi) FetchTournamentPlayers(tourneyId int) ([]TournamentPlayer, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
 
@@ -317,13 +324,13 @@ func (ra *RiichiApi) FetchTournamentPlayers(tourneyId int) ([]TournamentPlayer, 
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/getSelfManageInfo", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/getSelfManageInfo", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -345,7 +352,7 @@ func (ra *RiichiApi) FetchTournamentPlayers(tourneyId int) ([]TournamentPlayer, 
 }
 
 func (ra *RiichiApi) StartTournamentGame(tourneyId int, players []int, randomSeat bool) (bool, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return false, fmt.Errorf("failed to update tournament info, you're not login yet")
 	}
 
@@ -363,13 +370,13 @@ func (ra *RiichiApi) StartTournamentGame(tourneyId int, players []int, randomSea
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/allocateSelfUser", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/allocateSelfUser", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return false, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -386,7 +393,7 @@ func (ra *RiichiApi) StartTournamentGame(tourneyId int, players []int, randomSea
 }
 
 func (ra *RiichiApi) AdvStartTournamentGame(tourneyId int, players []int, scores []int, randomSeat bool) (bool, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return false, fmt.Errorf("failed to update tournament info, you're not login yet")
 	}
 
@@ -405,13 +412,13 @@ func (ra *RiichiApi) AdvStartTournamentGame(tourneyId int, players []int, scores
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/allocateSelfUser", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/allocateSelfUser", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return false, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -428,7 +435,7 @@ func (ra *RiichiApi) AdvStartTournamentGame(tourneyId int, players []int, scores
 }
 
 func (ra *RiichiApi) FetchOngoingGames(classifyId string) ([]TournamentLiveGame, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
 
@@ -444,13 +451,13 @@ func (ra *RiichiApi) FetchOngoingGames(classifyId string) ([]TournamentLiveGame,
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/readOnlineRoom", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/readOnlineRoom", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -472,7 +479,7 @@ func (ra *RiichiApi) FetchOngoingGames(classifyId string) ([]TournamentLiveGame,
 }
 
 func (ra *RiichiApi) ManageTournamentGame(tourneyId int, roomId string, Type int) (bool, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return false, fmt.Errorf("failed to update tournament info, you're not login yet")
 	}
 
@@ -486,13 +493,13 @@ func (ra *RiichiApi) ManageTournamentGame(tourneyId int, roomId string, Type int
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/controlSelfRoom", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/controlSelfRoom", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return false, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -509,7 +516,7 @@ func (ra *RiichiApi) ManageTournamentGame(tourneyId int, roomId string, Type int
 }
 
 func (ra *RiichiApi) FetchLog(paifu string) (*Log, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
 
@@ -522,13 +529,13 @@ func (ra *RiichiApi) FetchLog(paifu string) (*Log, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/getRoomData", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/getRoomData", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
@@ -550,7 +557,7 @@ func (ra *RiichiApi) FetchLog(paifu string) (*Log, error) {
 }
 
 func (ra *RiichiApi) FindPlayer(userId string) (*FindPlayer, error) {
-	if !ra.isLoggedIn {
+	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
 
@@ -563,13 +570,13 @@ func (ra *RiichiApi) FindPlayer(userId string) (*FindPlayer, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/mixed_client/findFriend", ra.domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/mixed_client/findFriend", ra.Domain), bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	for name, value := range ra.defaultHeader {
+	for name, value := range ra.DefaultHeader {
 		req.Header.Add(name, value)
 	}
 
