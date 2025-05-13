@@ -1,5 +1,7 @@
 export default function Player() {
     return (
-        <div></div>
+        <div>
+            Players
+        </div>
     );
 }

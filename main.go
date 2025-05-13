@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	_ "embed"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -73,7 +74,12 @@ func getContentType(ext string) string {
 
 func main() {
 	slog.Info("Riichi turney")
-	dbGame := database.CreateDatabaseGame()
+	dbGame, err := database.CreateDatabaseGame()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	riichiComand := riichicommand.CreateRiichiApi(dbGame)
 	discordBot := discordbot.CreateDiscordBot(
 		dbGame,

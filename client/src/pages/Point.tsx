@@ -1,5 +1,7 @@
 export default function Point() {
     return (
-        <div></div>
+        <div>
+            Point
+        </div>
     );
 }
