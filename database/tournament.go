@@ -33,7 +33,7 @@ func (dg *DatabaseGame) CreateTournament(body TournamentBody) (*Tournament, erro
 		Description: body.Description,
 		StartAt:     body.StartAt,
 		EndAt:       body.EndAt,
-		RegisterEnd: body.RegisterEnd,
+		RegisterEnd: &body.RegisterEnd,
 	}
 
 	err = dg.db.Create(tournament).Error

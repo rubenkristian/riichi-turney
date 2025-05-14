@@ -3,16 +3,16 @@ package database
 import "time"
 
 type Tournament struct {
-	Id          uint      `gorm:"primaryKey" json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	StartAt     time.Time `json:"start_at"`
-	EndAt       time.Time `json:"end_at"`
-	Active      bool      `json:"active"`
-	RegisterEnd time.Time `json:"register_end"`
-	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
-	DeletedAt   time.Time `json:"deleted_at" gorm:"index"`
+	Id          uint       `gorm:"primaryKey" json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	StartAt     time.Time  `json:"start_at"`
+	EndAt       time.Time  `json:"end_at"`
+	Active      bool       `json:"active"`
+	RegisterEnd *time.Time `json:"register_end"`
+	CreatedAt   time.Time  `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt   time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
+	DeletedAt   time.Time  `json:"deleted_at" gorm:"index"`
 }
 
 type RegisterTournament struct {

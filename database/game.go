@@ -16,7 +16,16 @@ func CreateDatabaseGame() (*DatabaseGame, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&Tournament{}, &RegisterTournament{}, &Player{}, &Match{}, &PlayerMatch{}, &Point{}); err != nil {
+	tables := []any{
+		&Tournament{},
+		&RegisterTournament{},
+		&Player{},
+		&Match{},
+		&PlayerMatch{},
+		&Point{},
+	}
+
+	if err := db.AutoMigrate(tables); err != nil {
 		return nil, err
 	}
 

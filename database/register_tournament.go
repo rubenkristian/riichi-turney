@@ -14,7 +14,7 @@ func (dg *DatabaseGame) CreateRegisterTournament() (*RegisterTournament, error) 
 		return nil, err
 	}
 
-	if time.Now().Compare(tournament.RegisterEnd) == 1 {
+	if tournament.RegisterEnd != nil && time.Now().Compare(*tournament.RegisterEnd) == 1 {
 		return nil, fmt.Errorf("cannot register to this tournament, tournament registration already end")
 	}
 
