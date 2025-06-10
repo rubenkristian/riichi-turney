@@ -25,6 +25,10 @@ type RiichiCitySetting struct {
 	Password string `json:"password"`
 }
 
+type RiichiTourneyInfoParams struct {
+	TournetId int `json:"tourney_id"`
+}
+
 type CommandResponse struct {
 }
 
@@ -104,7 +108,19 @@ func (ci *ClientInterface) CheckStatusDiscordBot(c *fiber.Ctx) error {
 	})(c)
 }
 
+func (ci *ClientInterface) GetTournamentInfo(c *fiber.Ctx) error {
+	tournetInfo := new(RiichiTourneyInfoParams)
+	detailTournament, err := ci.discordbot.RiichiCommand.FetchTournamentInfo(tournetInfo.TournetId)
+
+	if err != nil {
+		return utils.ResponseError(fiber.StatusInternalServerError, "Something went wrong", err)(c)
+	}
+
+	return utils.ResponseSuccess(fiber.StatusOk, "Success", detailTournament)(c)
+}
+
 func (ci *ClientInterface) CreatePlayer(c *fiber.Ctx) error {
+	ci.dbGame.
 	return utils.ResponseSuccess(fiber.StatusOK, "success", CreateResponse{})(c)
 }
 

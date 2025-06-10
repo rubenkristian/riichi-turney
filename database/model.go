@@ -13,17 +13,24 @@ type Tournament struct {
 	CreatedAt   time.Time  `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt   time.Time  `json:"deleted_at" gorm:"index"`
+
+	// Added relationships
+	Registrations []RegisterTournament `gorm:"foreignKey:TournamentId"`
+	Matches       []Match              `gorm:"foreignKey:TournamentId"`
+	Points        []Point              `gorm:"foreignKey:TournamentId"`
 }
 
 type RegisterTournament struct {
-	Id           uint       `gorm:"primaryKey" json:"id"`
-	PlayerId     uint       `json:"player_id"`
-	Player       Player     `gorm:"foreignKey:PlayerId" json:"player"`
-	TournamentId uint       `json:"tournament_id"`
-	Tournament   Tournament `json:"tournament"`
-	CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt    time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
-	DeletedAt    time.Time  `json:"deleted_at" gorm:"index"`
+	Id           uint      `gorm:"primaryKey" json:"id"`
+	PlayerId     uint      `json:"player_id"`
+	TournamentId uint      `json:"tournament_id"`
+	CreatedAt    time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt    time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	DeletedAt    time.Time `json:"deleted_at" gorm:"index"`
+
+	// Added relationships
+	Player     Player     `gorm:"foreignKey:PlayerId"`
+	Tournament Tournament `gorm:"foreignKey:TournamentId"`
 }
 
 type Player struct {
@@ -35,37 +42,49 @@ type Player struct {
 	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt      time.Time `json:"deleted_at" gorm:"index"`
+
+	// Added relationships
+	Registrations []RegisterTournament `gorm:"foreignKey:PlayerId"`
+	PlayerMatches []PlayerMatch        `gorm:"foreignKey:PlayerId"`
+	Points        []Point              `gorm:"foreignKey:PlayerId"`
 }
 
 type Match struct {
-	Id           uint       `gorm:"primaryKey" json:"id"`
-	TableName    string     `json:"table_name"`
-	Day          time.Time  `json:"day"`
-	TournamentId uint       `json:"tournament_id"`
-	Tournament   Tournament `json:"tournament"`
-	CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt    time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
-	DeletedAt    time.Time  `json:"deleted_at" gorm:"index"`
+	Id           uint      `gorm:"primaryKey" json:"id"`
+	TableName    string    `json:"table_name"`
+	Day          time.Time `json:"day"`
+	TournamentId uint      `json:"tournament_id"`
+	CreatedAt    time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt    time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	DeletedAt    time.Time `json:"deleted_at" gorm:"index"`
+
+	// Added relationships
+	Tournament    Tournament    `gorm:"foreignKey:TournamentId"`
+	PlayerMatches []PlayerMatch `gorm:"foreignKey:MatchId"`
 }
 
 type PlayerMatch struct {
 	Id       uint    `gorm:"primaryKey" json:"id"`
 	MatchId  uint    `json:"match_id"`
-	Match    Match   `gorm:"foreignKey:MatchId" json:"match"`
 	PlayerId uint    `json:"player_id"`
-	Player   Player  `gorm:"foreignKey:PlayerId" json:"player"`
 	Score    float64 `json:"score"`
+
+	// Added relationships
+	Player Player `gorm:"foreignKey:PlayerId"`
+	Match  Match  `gorm:"foreignKey:MatchId"`
 }
 
 type Point struct {
-	Id           uint       `gorm:"primaryKey" json:"id"`
-	Value        float64    `json:"value"`
-	Type         bool       `json:"type"`
-	PlayerId     uint       `json:"player_id"`
-	Player       Player     `gorm:"foreignKey:PlayerId" json:"player"`
-	TournamentId uint       `json:"tournament_id"`
-	Tournament   Tournament `json:"tournament"`
-	CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt    time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
-	DeletedAt    time.Time  `json:"deleted_at" gorm:"index"`
+	Id           uint      `gorm:"primaryKey" json:"id"`
+	Value        float64   `json:"value"`
+	Type         bool      `json:"type"`
+	PlayerId     uint      `json:"player_id"`
+	TournamentId uint      `json:"tournament_id"`
+	CreatedAt    time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt    time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	DeletedAt    time.Time `json:"deleted_at" gorm:"index"`
+
+	// Added relationships
+	Player     Player     `gorm:"foreignKey:PlayerId"`
+	Tournament Tournament `gorm:"foreignKey:TournamentId"`
 }

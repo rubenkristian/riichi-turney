@@ -23,12 +23,12 @@ type DiscordSetting struct {
 }
 
 type DiscordBot struct {
+	StartTime     int64
 	Setting       DiscordSetting
 	Client        bot.Client
 	DbGame        *database.DatabaseGame
 	RiichiCommand *riichicommand.RiichiApi
 	IsRunning     bool
-	StartTime     int64
 }
 
 func CreateDiscordBot(dbGame *database.DatabaseGame, riichiCommand *riichicommand.RiichiApi) *DiscordBot {

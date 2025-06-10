@@ -25,7 +25,7 @@ func CreateDatabaseGame() (*DatabaseGame, error) {
 		&Point{},
 	}
 
-	if err := db.AutoMigrate(tables); err != nil {
+	if err := db.AutoMigrate(tables...); err != nil {
 		return nil, err
 	}
 
