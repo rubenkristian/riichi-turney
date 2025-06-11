@@ -20,7 +20,7 @@ func (dg *DatabaseGame) GetPlayer(id uint) (*Player, error) {
 	return player, nil
 }
 
-func (dg *DatabaseGame) CreatePlayer(body PlayerBody) {
+func (dg *DatabaseGame) CreatePlayer(body PlayerBody) (*Player, error) {
 	player := &Player{
 		DiscordName: body.DiscordName,
 		RiichiCityName: body.RiichiCityName,
@@ -37,7 +37,7 @@ func (dg *DatabaseGame) CreatePlayer(body PlayerBody) {
 	return player, nil
 }
 
-func (dg *DatabaseGame) ListPlayer(player PaginationPlayer) {
+func (dg *DatabaseGame) ListPlayer(player PaginationPlayer) ([]Player, error) {
 	var players []Player
 	query := dg.db.Model(&player{})
 

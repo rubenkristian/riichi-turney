@@ -36,3 +36,22 @@ type PaginationPlayer struct {
 	FromDate   *string
 	ToDate     *string
 }
+
+type PaginationPoint struct {
+	Pagination Pagination
+	FromDate   *string
+	ToDate     *string
+	PlayerId   int
+}
+
+type MatchBody struct {
+	MatchName    string    `json:"match_name"`
+	Day          time.Time `json:"day"`
+	TournamentId uint      `json:"tournament_id"`
+}
+
+type PaginationMatch struct {
+	Pagination Pagination
+	FromDate   *string
+	ToDate     *string
+}
