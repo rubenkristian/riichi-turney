@@ -21,7 +21,7 @@ func (dg *DatabaseGame) addPoint() (*Point, error) {
 func (dg *DatabaseGame) getPointByPlayerId(point PaginationPoint) ([]Point, error) {
 	var points []Point
 	query := dg.db.Model(&Point{}).Where("player_id = ?", point.PlayerId)
-	
+
 	if point.Pagination.SortBy == "" {
 		point.Pagination.SortBy = "id"
 	}
@@ -31,7 +31,7 @@ func (dg *DatabaseGame) getPointByPlayerId(point PaginationPoint) ([]Point, erro
 	}
 
 	query = query.Order(
-		fmt.Sprintf("%s %s", point.Pagination.SortBy, point.Pagination.Sort)
+		fmt.Sprintf("%s %s", point.Pagination.SortBy, point.Pagination.Sort),
 	).
 		Limit(point.Pagination.Size).
 		Offset((max(point.Pagination.Page) - 1) * point.Pagination.Size)

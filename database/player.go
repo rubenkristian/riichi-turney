@@ -6,7 +6,7 @@ func (dg *DatabaseGame) GetPlayer(id uint) (*Player, error) {
 	var player *Player
 
 	if id <= 0 {
-		dg.db.Order('created_at desc').First(player)
+		dg.db.Order("created_at desc").First(player)
 
 		return player, nil
 	}
@@ -22,10 +22,10 @@ func (dg *DatabaseGame) GetPlayer(id uint) (*Player, error) {
 
 func (dg *DatabaseGame) CreatePlayer(body PlayerBody) (*Player, error) {
 	player := &Player{
-		DiscordName: body.DiscordName,
+		DiscordName:    body.DiscordName,
 		RiichiCityName: body.RiichiCityName,
-		DiscordId: body.DiscordId,
-		RiichiCityId: body.RiichiCityId,
+		DiscordId:      body.DiscordId,
+		RiichiCityId:   body.RiichiCityId,
 	}
 
 	err := dg.db.Create(player).Error
@@ -39,7 +39,7 @@ func (dg *DatabaseGame) CreatePlayer(body PlayerBody) (*Player, error) {
 
 func (dg *DatabaseGame) ListPlayer(player PaginationPlayer) ([]Player, error) {
 	var players []Player
-	query := dg.db.Model(&player{})
+	query := dg.db.Model(&players)
 
 	if player.Pagination.Search != "" {
 		searchQuery := fmt.Sprintf("%%%s%%", player.Pagination.Search)
@@ -55,7 +55,7 @@ func (dg *DatabaseGame) ListPlayer(player PaginationPlayer) ([]Player, error) {
 	}
 
 	query = query.Order(
-		fmt.Sprintf("%s %s", player.Pagination.SortBy, player.Pagination.Sort)
+		fmt.Sprintf("%s %s", player.Pagination.SortBy, player.Pagination.Sort),
 	).
 		Limit(player.Pagination.Size).
 		Offset((max(player.Pagination.Page, 1) - 1) * player.Pagination.Size)
@@ -67,7 +67,7 @@ func (dg *DatabaseGame) ListPlayer(player PaginationPlayer) ([]Player, error) {
 	return players, nil
 }
 
-func (dg *DatabaseGame) DeletePlayer(int playerId) (bool, error) {
+func (dg *DatabaseGame) DeletePlayer(playerId int) (bool, error) {
 	err := dg.db.Delete(&Player{}, playerId).Error
 
 	if err != nil {

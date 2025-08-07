@@ -1,15 +1,13 @@
 package database
 
-import "golang.org/x/crypto/openpgp/errors"
-
 func (dg *DatabaseGame) CreatePlayerMatch() (PlayerMatch, error) {
-	return nil, nil
+	return PlayerMatch{}, nil
 }
 
 func (dg *DatabaseGame) UpdatePlayerMatch() (PlayerMatch, error) {
-	return nil, nil
+	return PlayerMatch{}, nil
 }
 
-func (dg *DatabaseGame) GetPlayerInMatch(int matchId) ([]PlayerMatch, error) {
-	return [], nil
+func (dg *DatabaseGame) GetPlayerInMatch(matchId int) ([]PlayerMatch, error) {
+	return []PlayerMatch{}, nil
 }

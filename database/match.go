@@ -1,9 +1,11 @@
 package database
 
+import "fmt"
+
 func (dg *DatabaseGame) CreateMatch(body MatchBody) (*Match, error) {
 	match := &Match{
-		TableName: body.MatchName,
-		Day: body.Day,
+		TableName:    body.MatchName,
+		Day:          body.Day,
 		TournamentId: body.TournamentId,
 	}
 
@@ -44,7 +46,7 @@ func (dg *DatabaseGame) ListMatch(match PaginationMatch) ([]Match, error) {
 	}
 
 	query = query.Order(
-		fmt.Sprintf("%s %s", match.Pagination.SortBy, match.Pagination.Sort)
+		fmt.Sprintf("%s %s", match.Pagination.SortBy, match.Pagination.Sort),
 	).
 		Limit(match.Pagination.Size).
 		Offset((max(match.Pagination.Page, 1) - 1) * match.Pagination.Size)
@@ -53,14 +55,14 @@ func (dg *DatabaseGame) ListMatch(match PaginationMatch) ([]Match, error) {
 		return nil, err
 	}
 
-	return matchs, nil 
+	return matchs, nil
 }
 
 func (dg *DatabaseGame) DetailMatch(id int) (*Match, error) {
 	var match *Match
 
 	if id <= 0 {
-		err := dg.db.Order('created_at desc').First(match)
+		err := dg.db.Order("created_at desc").First(match).Error
 
 		if err != nil {
 			return nil, err
@@ -82,7 +84,6 @@ func (dg *DatabaseGame) ListMatchByPlayerId(playerId int, match PaginationMatch)
 	var matchs []Match
 	query := dg.db.Model(&Match{}).Where("player_id = ?", playerId)
 
-	
 	if match.Pagination.Search != "" {
 		searchQuery := fmt.Sprintf("%%%s%%", match.Pagination.Search)
 		query = query.Where("match_name LIKE ?", searchQuery)
@@ -97,7 +98,7 @@ func (dg *DatabaseGame) ListMatchByPlayerId(playerId int, match PaginationMatch)
 	}
 
 	query = query.Order(
-		fmt.Sprintf("%s %s", match.Pagination.SortBy, match.Pagination.Sort)
+		fmt.Sprintf("%s %s", match.Pagination.SortBy, match.Pagination.Sort),
 	).
 		Limit(match.Pagination.Size).
 		Offset((max(match.Pagination.Page, 1) - 1) * match.Pagination.Size)
