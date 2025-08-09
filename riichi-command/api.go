@@ -19,7 +19,7 @@ type RiichiApi struct {
 	DeviceId      string
 	Domain        string
 	Sid           string
-	Uid           string
+	Uid           int64
 	Version       string
 	DefaultHeader map[string]string
 	Credential    Credential
@@ -32,7 +32,10 @@ type SIDResponse struct {
 
 func CreateRiichiApi(dbGame *database.DatabaseGame) *RiichiApi {
 	return &RiichiApi{
-		DbGame: dbGame,
+		DbGame:     dbGame,
+		IsLoggedIn: false,
+		Version:    "1.1.4.11030",
+		DeviceId:   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
 }
 
@@ -59,23 +62,27 @@ func (ra *RiichiApi) SetupRiichi(mainHost string, email string, password string)
 
 func (ra *RiichiApi) getDomain(mainHost string) (string, error) {
 	res, err := http.Get(mainHost)
-
 	if err != nil {
 		return "", err
 	}
-
-	var domain Domain
-	if err := json.NewDecoder(res.Body).Decode(&domain); err != nil {
-		return "", err
-	}
+	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
-
 	if err != nil {
+		return "", err
+	}
+
+	// Optional: ensure temp folder exists
+	if err := os.MkdirAll("./temp", 0755); err != nil {
 		return "", err
 	}
 
 	if err := os.WriteFile("./temp/domain.json", body, 0644); err != nil {
+		return "", err
+	}
+
+	var domain Domain
+	if err := json.Unmarshal(body, &domain); err != nil {
 		return "", err
 	}
 
@@ -88,6 +95,7 @@ func (ra *RiichiApi) login() error {
 	if err != nil {
 		return err
 	}
+	ra.Sid = sid
 
 	uid, err := ra.fetchLogin()
 
@@ -95,7 +103,6 @@ func (ra *RiichiApi) login() error {
 		return err
 	}
 
-	ra.Sid = sid
 	ra.Uid = uid
 	ra.IsLoggedIn = true
 	ra.refreshHeader()
@@ -105,7 +112,7 @@ func (ra *RiichiApi) login() error {
 
 func (ra *RiichiApi) logout() {
 	ra.Sid = ""
-	ra.Uid = ""
+	ra.Uid = 0
 	ra.IsLoggedIn = false
 	ra.refreshHeader()
 }
@@ -136,44 +143,44 @@ func (ra *RiichiApi) fetchSID() (string, error) {
 	return result.Data, nil
 }
 
-func (ra *RiichiApi) fetchLogin() (string, error) {
+func (ra *RiichiApi) fetchLogin() (int64, error) {
 	credential, err := json.MarshalIndent(ra.Credential, "", " ")
 
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/users/emailLogin", ra.Domain), bytes.NewBuffer(credential))
 
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	req.Header.Add("Cookies", fmt.Sprintf(`{"channel":"default","deviceid":"%s","lang":"en","sid":"%s","version":"%s","platform":"pc"}`, ra.DeviceId, ra.Sid, ra.Version))
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
 	res, err := client.Do(req)
 
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	defer res.Body.Close()
 
 	var loginData ResponseLogin
 	if err := json.NewDecoder(res.Body).Decode(&loginData); err != nil {
-		return "", err
+		return 0, err
 	}
 
 	body, err := json.MarshalIndent(loginData, "", " ")
 
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	if err := os.WriteFile(fmt.Sprintf("./temp/user-%d.json", time.Now().UnixNano()), body, 0644); err != nil {
-		return "", err
+		return 0, err
 	}
 
 	return loginData.Data.User.Id, nil
@@ -182,7 +189,7 @@ func (ra *RiichiApi) fetchLogin() (string, error) {
 func (ra *RiichiApi) refreshHeader() {
 	ra.DefaultHeader = map[string]string{
 		"User-Agent":      "UnityPlayer/2020.3.42f1c1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)",
-		"Cookies":         fmt.Sprintf(`{"channel":"default","lang":"en","deviceid":"%s","sid":"%s","uid":%s,"region":"cn","platform":"pc","version":"%s"}`, ra.DeviceId, ra.Sid, ra.Uid, ra.Version),
+		"Cookies":         fmt.Sprintf(`{"channel":"default","lang":"en","deviceid":"%s","sid":"%s","uid":%d,"region":"cn","platform":"pc","version":"%s"}`, ra.DeviceId, ra.Sid, ra.Uid, ra.Version),
 		"Content-Type":    "application/json",
 		"Accept":          "application/json",
 		"X-Unity-Version": "2021.3.38f1",
@@ -589,12 +596,18 @@ func (ra *RiichiApi) FindPlayer(userId string) (*FindPlayer, error) {
 
 	defer res.Body.Close()
 
-	var players FindPlayer
-	if err := json.NewDecoder(res.Body).Decode(&players); err != nil {
+	resBody, err := io.ReadAll(res.Body)
+
+	if err != nil {
 		return nil, err
 	}
 
-	return &players, nil
+	var resFindPlayer ResponseFindPlayer
+	if err := json.Unmarshal(resBody, &resFindPlayer); err != nil {
+		return nil, err
+	}
+
+	return &resFindPlayer.Data, nil
 }
 
 func (ra *RiichiApi) shuffleArray(players []int) []int {

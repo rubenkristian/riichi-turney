@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/disgoorg/disgo"
@@ -173,7 +175,51 @@ func (db *DiscordBot) onEventInteract(event *events.ApplicationCommandInteractio
 }
 
 func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCreate) {
+	customID := event.Data.CustomID()
 
+	user := event.User()
+	discordID := uint64(user.ID)
+	discordName := user.Username
+
+	parts := strings.SplitN(customID, ":", 2)
+	action := parts[0]
+
+	fmt.Println(customID)
+
+	switch action {
+	case "confirm":
+		params := strings.Split(parts[1], ",")
+		riichiCityName := params[0]
+		riichiCityId, err := strconv.ParseUint(params[1], 10, 64)
+		if err != nil {
+			event.CreateMessage(
+				discord.NewMessageCreateBuilder().SetContent("❌ Registration cancelled, riichi city id not number").
+					SetEphemeral(true).
+					Build(),
+			)
+		}
+		db.DbGame.CreatePlayer(database.PlayerBody{
+			DiscordId:      discordID,
+			DiscordName:    discordName,
+			RiichiCityName: riichiCityName,
+			RiichiCityId:   riichiCityId,
+		})
+
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("✅ Registration success.").Build())
+	case "cancel":
+		event.CreateMessage(
+			discord.NewMessageCreateBuilder().SetContent("❌ Registration cancelled").
+				SetEphemeral(true).
+				Build(),
+		)
+
+	default:
+		event.CreateMessage(
+			discord.NewMessageCreateBuilder().SetContent("❌ no action for " + action).
+				SetEphemeral(true).
+				Build(),
+		)
+	}
 }
 
 func (db *DiscordBot) GetToken() string {

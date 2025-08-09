@@ -37,8 +37,8 @@ type Player struct {
 	Id             uint      `gorm:"primaryKey" json:"id"`
 	DiscordName    string    `json:"discord_name"`
 	RiichiCityName string    `json:"riichi_city_name"`
-	DiscordId      int64     `json:"discord_id"`
-	RiichiCityId   int64     `json:"riichi_city_id"`
+	DiscordId      uint64    `json:"discord_id"`
+	RiichiCityId   uint64    `json:"riichi_city_id"`
 	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt      time.Time `json:"deleted_at" gorm:"index"`

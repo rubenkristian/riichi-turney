@@ -33,16 +33,16 @@ type LoginData struct {
 	IsCompleteNew      bool     `json:"isCompleteNew"`
 	IsCompleteNewRole  bool     `json:"isCompleteNewRole"`
 	ServerTime         int      `json:"serverTime"`
-	TokenTypes         int      `json:"tokenTypes"`
+	TokenTypes         []int    `json:"tokenTypes"`
 	User               UserData `json:"user"`
 }
 
 type UserData struct {
 	Avatar     string `json:"avatar"`
 	Email      string `json:"email"`
-	Id         string `json:"id"`
+	Id         int64  `json:"id"`
 	Nickname   string `json:"nickname"`
-	RegisterAt int    `json:"registerAt"`
+	RegisterAt int64  `json:"registerAt"`
 	Status     int    `json:"status"`
 }
 
@@ -336,4 +336,12 @@ type FriendList struct {
 	ThreeLevel        int    `json:"threeLevel"`
 	TitleID           int    `json:"titleID"`
 	UserID            int    `json:"userID"`
+}
+
+type ResponseFindPlayer struct {
+	Code         int        `json:"code"`
+	AnalysisData string     `json:"analysis_data"`
+	CheckData    string     `json:"check_data"`
+	Message      string     `json:"message"`
+	Data         FindPlayer `json:"data"`
 }

@@ -27,8 +27,8 @@ type PaginationTournament struct {
 type PlayerBody struct {
 	DiscordName    string `json:"discord_name"`
 	RiichiCityName string `json:"riichi_city_name"`
-	DiscordId      int64  `json:"discord_id"`
-	RiichiCityId   int64  `json:"riichi_city_id"`
+	DiscordId      uint64 `json:"discord_id"`
+	RiichiCityId   uint64 `json:"riichi_city_id"`
 }
 
 type PaginationPlayer struct {

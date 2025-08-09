@@ -20,6 +20,16 @@ func (dg *DatabaseGame) GetPlayer(id uint) (*Player, error) {
 	return player, nil
 }
 
+func (dg *DatabaseGame) GetPlayerByRiichiId(id uint64) (*Player, error) {
+	var player Player
+
+	if err := dg.db.Where("riichi_city_id = ?", id).First(&player).Error; err != nil {
+		return nil, err
+	}
+
+	return &player, nil
+}
+
 func (dg *DatabaseGame) CreatePlayer(body PlayerBody) (*Player, error) {
 	player := &Player{
 		DiscordName:    body.DiscordName,
