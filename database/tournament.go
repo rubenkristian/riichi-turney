@@ -1,6 +1,12 @@
 package database
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"gorm.io/gorm"
+)
 
 func (dg *DatabaseGame) GetTournament(id uint) (*Tournament, error) {
 	var tournament *Tournament
@@ -20,29 +26,30 @@ func (dg *DatabaseGame) GetTournament(id uint) (*Tournament, error) {
 }
 
 func (dg *DatabaseGame) CreateTournament(body TournamentBody) (*Tournament, error) {
-	var tournament *Tournament
-
-	err := dg.db.Where("active = ?", true).First(tournament).Error
-
-	if err != nil {
+	var existing Tournament
+	err := dg.db.Where("active = ?", true).First(&existing).Error
+	if err == nil {
+		return nil, fmt.Errorf("an active tournament already exists")
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 
-	tournament = &Tournament{
+	tournament := Tournament{
 		Name:        body.Name,
 		Description: body.Description,
 		StartAt:     body.StartAt,
 		EndAt:       body.EndAt,
 		RegisterEnd: &body.RegisterEnd,
+		RoleID:      body.RoleID,
+		Active:      true,
 	}
 
-	err = dg.db.Create(tournament).Error
-
-	if err != nil {
+	if err = dg.db.Create(&tournament).Error; err != nil {
 		return nil, err
 	}
 
-	return tournament, nil
+	return &tournament, nil
 }
 
 func (dg *DatabaseGame) ListTournament(tournament PaginationTournament) ([]Tournament, error) {
@@ -54,22 +61,28 @@ func (dg *DatabaseGame) ListTournament(tournament PaginationTournament) ([]Tourn
 	}
 
 	if tournament.FromDate != nil && tournament.ToDate != nil {
-		query = query.Where("craeted_at BETWEEN ?,?", tournament.FromDate, tournament.ToDate)
+		query = query.Where("created_at BETWEEN ? AND ?", tournament.FromDate, tournament.ToDate)
 	}
 
-	if tournament.Pagination.SortBy == "" {
+	// Whitelist sort fields
+	allowedSortBy := map[string]bool{"id": true, "name": true, "created_at": true}
+	if !allowedSortBy[tournament.Pagination.SortBy] {
 		tournament.Pagination.SortBy = "id"
 	}
 
-	if tournament.Pagination.Sort == "" {
+	if strings.ToUpper(tournament.Pagination.Sort) != "DESC" {
 		tournament.Pagination.Sort = "ASC"
 	}
 
-	query = query.Order(
-		fmt.Sprintf("%s %s", tournament.Pagination.SortBy, tournament.Pagination.Sort),
-	).
+	page := tournament.Pagination.Page
+	if page < 1 {
+		page = 1
+	}
+	offset := (page - 1) * tournament.Pagination.Size
+
+	query = query.Order(fmt.Sprintf("%s %s", tournament.Pagination.SortBy, tournament.Pagination.Sort)).
 		Limit(tournament.Pagination.Size).
-		Offset((max(tournament.Pagination.Page, 1) - 1) * tournament.Pagination.Size)
+		Offset(offset)
 
 	if err := query.Find(&tournaments).Error; err != nil {
 		return nil, err

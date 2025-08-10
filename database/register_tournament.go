@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-func (dg *DatabaseGame) CreateRegisterTournament() (*RegisterTournament, error) {
-	var tournament *Tournament
+func (dg *DatabaseGame) CreateRegisterTournament(playerId uint64) (*RegisterTournament, error) {
+	var tournament Tournament
 
-	err := dg.db.Where("active = ?", true).First(tournament).Error
+	err := dg.db.Where("active = ?", true).First(&tournament).Error
 
 	if err != nil {
 		return nil, err
@@ -18,5 +18,24 @@ func (dg *DatabaseGame) CreateRegisterTournament() (*RegisterTournament, error) 
 		return nil, fmt.Errorf("cannot register to this tournament, tournament registration already end")
 	}
 
-	return nil, nil
+	var exist RegisterTournament
+
+	if err := dg.db.Where("tournament_id = ? AND player_id = ?", tournament.Id, playerId).First(&exist).Error; err == nil {
+		return nil, fmt.Errorf("this player already registered")
+	}
+
+	registerTournament := RegisterTournament{
+		PlayerId:     playerId,
+		TournamentId: tournament.Id,
+	}
+
+	if err := dg.db.Create(&registerTournament).Error; err != nil {
+		return nil, err
+	}
+
+	if err := dg.db.Preload("Player").Preload("Tournament").First(&registerTournament, registerTournament.Id).Error; err != nil {
+		return nil, err
+	}
+
+	return &registerTournament, nil
 }

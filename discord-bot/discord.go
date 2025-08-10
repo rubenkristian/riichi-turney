@@ -177,10 +177,6 @@ func (db *DiscordBot) onEventInteract(event *events.ApplicationCommandInteractio
 func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCreate) {
 	customID := event.Data.CustomID()
 
-	user := event.User()
-	discordID := uint64(user.ID)
-	discordName := user.Username
-
 	parts := strings.SplitN(customID, ":", 2)
 	action := parts[0]
 
@@ -188,24 +184,33 @@ func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCrea
 
 	switch action {
 	case "confirm":
-		params := strings.Split(parts[1], ",")
-		riichiCityName := params[0]
-		riichiCityId, err := strconv.ParseUint(params[1], 10, 64)
+		playerId, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
 			event.CreateMessage(
-				discord.NewMessageCreateBuilder().SetContent("❌ Registration cancelled, riichi city id not number").
+				discord.NewMessageCreateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
 					SetEphemeral(true).
 					Build(),
 			)
+			return
 		}
-		db.DbGame.CreatePlayer(database.PlayerBody{
-			DiscordId:      discordID,
-			DiscordName:    discordName,
-			RiichiCityName: riichiCityName,
-			RiichiCityId:   riichiCityId,
-		})
 
-		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("✅ Registration success.").Build())
+		newRegister, err := db.DbGame.CreateRegisterTournament(playerId)
+
+		if err != nil {
+			event.CreateMessage(
+				discord.NewMessageCreateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
+					SetEphemeral(true).
+					Build(),
+			)
+			return
+		}
+
+		db.Client.Rest().AddMemberRole(snowflake.MustParse(db.Setting.ServerId), event.User().ID, snowflake.MustParse(newRegister.Tournament.RoleID))
+		event.CreateMessage(
+			discord.NewMessageCreateBuilder().
+				SetContent(fmt.Sprintf("✅ Registration success for %s.", newRegister.Player.RiichiCityName)).
+				SetEphemeral(true).Build(),
+		)
 	case "cancel":
 		event.CreateMessage(
 			discord.NewMessageCreateBuilder().SetContent("❌ Registration cancelled").
@@ -229,3 +234,7 @@ func (db *DiscordBot) GetToken() string {
 func (db *DiscordBot) GetAdminId() []string {
 	return db.Setting.AdminId
 }
+
+// func (db *DiscordBot) CreateRoleTournament() {
+// 	role, err := db.Client.Rest().AddMemberRole()
+// }

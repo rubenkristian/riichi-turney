@@ -7,7 +7,6 @@ func (dg *DatabaseGame) GetPlayer(id uint) (*Player, error) {
 
 	if id <= 0 {
 		dg.db.Order("created_at desc").First(player)
-
 		return player, nil
 	}
 

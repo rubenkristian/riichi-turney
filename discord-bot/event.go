@@ -6,10 +6,15 @@ import (
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/rubenkristian/riichi-turney/database"
 )
 
 // handle when command /register selected
 func (db *DiscordBot) EventRegister(event *events.ApplicationCommandInteractionCreate) {
+	user := event.User()
+	discordID := uint64(user.ID)
+	discordName := user.Username
+
 	data := event.SlashCommandInteractionData()
 
 	riichi_city_id := data.String("riichi_city_id")
@@ -24,10 +29,6 @@ func (db *DiscordBot) EventRegister(event *events.ApplicationCommandInteractionC
 
 	if err != nil {
 		fmt.Println(err.Error())
-	}
-
-	if playerGame != nil {
-		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(fmt.Sprintf("This id %s already registered", riichi_city_id)).Build())
 	}
 
 	player, err := db.RiichiCommand.FindPlayer(riichi_city_id)
@@ -45,7 +46,43 @@ func (db *DiscordBot) EventRegister(event *events.ApplicationCommandInteractionC
 
 	playerData := player.FriendList[0]
 
-	confirmBtn := discord.NewPrimaryButton("Confirm", fmt.Sprintf("confirm:%s,%d", playerData.Nickname, playerData.UserID))
+	if playerGame != nil {
+		confirmBtn := discord.NewPrimaryButton("Confirm", fmt.Sprintf("confirm:%d", playerGame.Id))
+		cancelBtn := discord.NewSecondaryButton("Cancel", "cancel")
+
+		event.CreateMessage(
+			discord.NewMessageCreateBuilder().
+				SetContent(fmt.Sprintf("Username: %s, Riichi City Id: %s ?", playerGame.RiichiCityName, riichi_city_id)).
+				AddActionRow(confirmBtn, cancelBtn).Build(),
+		)
+		return
+	}
+
+	riichiCityId, err := strconv.ParseUint(riichi_city_id, 10, 64)
+	if err != nil {
+		event.CreateMessage(
+			discord.NewMessageCreateBuilder().SetContent("❌ Registration cancelled, riichi city id not number").
+				SetEphemeral(true).
+				Build(),
+		)
+	}
+
+	newPlayer, err := db.DbGame.CreatePlayer(database.PlayerBody{
+		DiscordId:      discordID,
+		DiscordName:    discordName,
+		RiichiCityName: playerData.Nickname,
+		RiichiCityId:   riichiCityId,
+	})
+
+	if err != nil {
+		event.CreateMessage(
+			discord.NewMessageCreateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
+				SetEphemeral(true).
+				Build(),
+		)
+	}
+
+	confirmBtn := discord.NewPrimaryButton("Confirm", fmt.Sprintf("confirm:%d", newPlayer.Id))
 	cancelBtn := discord.NewSecondaryButton("Cancel", "cancel")
 
 	event.CreateMessage(

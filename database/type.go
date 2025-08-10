@@ -8,6 +8,7 @@ type TournamentBody struct {
 	StartAt     time.Time `json:"start_at"`
 	EndAt       time.Time `json:"end_at"`
 	RegisterEnd time.Time `json:"register_end"`
+	RoleID      string    `json:"role_id"`
 }
 
 type Pagination struct {
