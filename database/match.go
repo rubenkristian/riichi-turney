@@ -4,9 +4,8 @@ import "fmt"
 
 func (dg *DatabaseGame) CreateMatch(body MatchBody) (*Match, error) {
 	match := &Match{
-		TableName:    body.MatchName,
-		Day:          body.Day,
 		TournamentId: body.TournamentId,
+		Status:       0,
 	}
 
 	err := dg.db.Create(match).Error
@@ -18,7 +17,17 @@ func (dg *DatabaseGame) CreateMatch(body MatchBody) (*Match, error) {
 	return match, nil
 }
 
-func (dg *DatabaseGame) DeleteMatch(matchId uint) (bool, error) {
+func (dg *DatabaseGame) GetMatchById(matchId uint64) (*Match, error) {
+	var match Match
+
+	if err := dg.db.Preload("Tournament").Preload("PlayerMatches.Player").First(&match, matchId).Error; err != nil {
+		return nil, err
+	}
+
+	return &match, nil
+}
+
+func (dg *DatabaseGame) DeleteMatch(matchId uint64) (bool, error) {
 	err := dg.db.Delete(&Match{}, matchId).Error
 
 	if err != nil {
@@ -56,28 +65,6 @@ func (dg *DatabaseGame) ListMatch(match PaginationMatch) ([]Match, error) {
 	}
 
 	return matchs, nil
-}
-
-func (dg *DatabaseGame) DetailMatch(id int) (*Match, error) {
-	var match *Match
-
-	if id <= 0 {
-		err := dg.db.Order("created_at desc").First(match).Error
-
-		if err != nil {
-			return nil, err
-		}
-
-		return match, nil
-	}
-
-	err := dg.db.First(match, id).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return match, nil
 }
 
 func (dg *DatabaseGame) ListMatchByPlayerId(playerId int, match PaginationMatch) ([]Match, error) {

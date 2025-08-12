@@ -196,12 +196,12 @@ func (ra *RiichiApi) refreshHeader() {
 	}
 }
 
-func (ra *RiichiApi) FetchTournamentInfo(turneyId int) (*TournamentInfo, error) {
+func (ra *RiichiApi) FetchTournamentInfo(turneyId uint64) (*TournamentInfo, error) {
 	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
 
-	body, err := json.Marshal(map[string]int{
+	body, err := json.Marshal(map[string]uint64{
 		"id": turneyId,
 	})
 
@@ -318,7 +318,7 @@ func (ra *RiichiApi) FetchTournamentLogList(classifyId string, lastId int) ([]To
 	return responseTournameLogList.Data, nil
 }
 
-func (ra *RiichiApi) FetchTournamentPlayers(tourneyId int) ([]TournamentPlayer, error) {
+func (ra *RiichiApi) FetchTournamentPlayers(tourneyId uint64) ([]TournamentPlayer, error) {
 	if !ra.IsLoggedIn {
 		return nil, fmt.Errorf("failed to fetch tournament info, you're not login yet")
 	}
@@ -358,7 +358,7 @@ func (ra *RiichiApi) FetchTournamentPlayers(tourneyId int) ([]TournamentPlayer, 
 	return responseTournamentPlayers.Data, nil
 }
 
-func (ra *RiichiApi) StartTournamentGame(tourneyId int, players []int, randomSeat bool) (bool, error) {
+func (ra *RiichiApi) StartTournamentGame(tourneyId uint64, players []uint64, randomSeat bool) (bool, error) {
 	if !ra.IsLoggedIn {
 		return false, fmt.Errorf("failed to update tournament info, you're not login yet")
 	}
@@ -610,7 +610,46 @@ func (ra *RiichiApi) FindPlayer(userId string) (*FindPlayer, error) {
 	return &resFindPlayer.Data, nil
 }
 
-func (ra *RiichiApi) shuffleArray(players []int) []int {
+func (ra *RiichiApi) SendInvite(tournamentId uint64, players []uint64) error {
+	if !ra.IsLoggedIn {
+		return fmt.Errorf("failed to fetch tournament info, you're not login yet")
+	}
+
+	body, err := json.Marshal(map[string]any{
+		"isAdd":    true,
+		"matchID":  2,
+		"usersID":  players,
+		"userType": 1,
+		"isReset":  false,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/manageSelfUser", ra.Domain), bytes.NewBuffer(body))
+
+	if err != nil {
+		return err
+	}
+
+	for name, value := range ra.DefaultHeader {
+		req.Header.Add(name, value)
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	return nil
+}
+
+func (ra *RiichiApi) shuffleArray(players []uint64) []uint64 {
 	for i := len(players) - 1; i > 0; i-- {
 		j := rand.IntN(i + 1)
 		players[i], players[j] = players[j], players[i]

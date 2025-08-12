@@ -2,27 +2,10 @@ package database
 
 import "fmt"
 
-func (dg *DatabaseGame) GetPlayer(id uint) (*Player, error) {
-	var player *Player
-
-	if id <= 0 {
-		dg.db.Order("created_at desc").First(player)
-		return player, nil
-	}
-
-	err := dg.db.First(player, id).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return player, nil
-}
-
 func (dg *DatabaseGame) GetPlayerByRiichiId(id uint64) (*Player, error) {
 	var player Player
 
-	if err := dg.db.Where("riichi_city_id = ?", id).First(&player).Error; err != nil {
+	if err := dg.db.First(&player, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -31,10 +14,10 @@ func (dg *DatabaseGame) GetPlayerByRiichiId(id uint64) (*Player, error) {
 
 func (dg *DatabaseGame) CreatePlayer(body PlayerBody) (*Player, error) {
 	player := &Player{
+		Id:             body.RiichiCityId,
 		DiscordName:    body.DiscordName,
 		RiichiCityName: body.RiichiCityName,
 		DiscordId:      body.DiscordId,
-		RiichiCityId:   body.RiichiCityId,
 	}
 
 	err := dg.db.Create(player).Error

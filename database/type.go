@@ -3,12 +3,13 @@ package database
 import "time"
 
 type TournamentBody struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	StartAt     time.Time `json:"start_at"`
-	EndAt       time.Time `json:"end_at"`
-	RegisterEnd time.Time `json:"register_end"`
-	RoleID      string    `json:"role_id"`
+	TournamentId uint64    `json:"tournament_id"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	StartAt      time.Time `json:"start_at"`
+	EndAt        time.Time `json:"end_at"`
+	RegisterEnd  time.Time `json:"register_end"`
+	ClassifyID   string    `json:"classify_id"`
 }
 
 type Pagination struct {
@@ -48,11 +49,17 @@ type PaginationPoint struct {
 type MatchBody struct {
 	MatchName    string    `json:"match_name"`
 	Day          time.Time `json:"day"`
-	TournamentId uint      `json:"tournament_id"`
+	TournamentId uint64    `json:"tournament_id"`
 }
 
 type PaginationMatch struct {
 	Pagination Pagination
 	FromDate   *string
 	ToDate     *string
+}
+
+type PlayerCheck struct {
+	RiichiId  uint64
+	DiscordId uint64
+	Status    int
 }

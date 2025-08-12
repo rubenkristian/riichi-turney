@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (dg *DatabaseGame) GetTournament(id uint) (*Tournament, error) {
+func (dg *DatabaseGame) GetTournament(id uint64) (*Tournament, error) {
 	var tournament *Tournament
 	if id == 0 {
 		dg.db.Order("created_at desc").First(tournament)
@@ -36,13 +36,14 @@ func (dg *DatabaseGame) CreateTournament(body TournamentBody) (*Tournament, erro
 	}
 
 	tournament := Tournament{
+		Id:          body.TournamentId,
 		Name:        body.Name,
 		Description: body.Description,
 		StartAt:     body.StartAt,
 		EndAt:       body.EndAt,
 		RegisterEnd: &body.RegisterEnd,
-		RoleID:      body.RoleID,
 		Active:      true,
+		ClassifyID:  body.ClassifyID,
 	}
 
 	if err = dg.db.Create(&tournament).Error; err != nil {
@@ -50,6 +51,20 @@ func (dg *DatabaseGame) CreateTournament(body TournamentBody) (*Tournament, erro
 	}
 
 	return &tournament, nil
+}
+
+func (dg *DatabaseGame) SetTournamentInactive(id uint64) (bool, error) {
+	result := dg.db.Model(&Tournament{}).Where("id = ?", id).Update("active", false)
+
+	if result.Error != nil {
+		return false, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return false, fmt.Errorf("No rows updated")
+	} else {
+		return true, nil
+	}
 }
 
 func (dg *DatabaseGame) ListTournament(tournament PaginationTournament) ([]Tournament, error) {

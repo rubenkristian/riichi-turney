@@ -19,9 +19,10 @@ import (
 )
 
 type DiscordSetting struct {
-	Token    string
-	AdminId  []string
-	ServerId string
+	Token         string
+	AdminId       []string
+	ServerId      string
+	ChannelNotify string
 }
 
 type DiscordBot struct {

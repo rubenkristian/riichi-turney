@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+func (dg *DatabaseGame) GetRegisterTournamentPlayers(tournamentId uint64) ([]uint64, error) {
+	var ids []uint64
+	err := dg.db.Model(&RegisterTournament{}).Select("id").Where("tournament_id = ?", tournamentId).Pluck("id", &ids).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ids, nil
+}
+
 func (dg *DatabaseGame) CreateRegisterTournament(playerId uint64) (*RegisterTournament, error) {
 	var tournament Tournament
 

@@ -79,7 +79,7 @@ type TournamentSetting struct {
 	CardType          int           `json:"CardType"`
 	ChangBang         int           `json:"ChangBang"`
 	ContinuousX       int           `json:"ContinuousX"`
-	EndTime           int           `json:"endTime"`
+	EndTime           int64         `json:"endTime"`
 	EnterPassWord     string        `json:"enterPassWord"`
 	EnterRulesType    int           `json:"enterRulesType"`
 	FangFu            int           `json:"FangFu"`
@@ -146,7 +146,7 @@ type TournamentSetting struct {
 	PlayerCount       int           `json:"playerCount"`
 	RankType          int           `json:"RankType"`
 	Round             int           `json:"round"`
-	StartTime         int           `json:"startTime"`
+	StartTime         int64         `json:"startTime"`
 	ThreeZiMoType     int           `json:"threeZiMoType"`
 	TimeLimitType     int           `json:"timeLimitType"`
 	Type              int           `json:"type"`
@@ -202,13 +202,13 @@ type TournamentPlayer struct {
 	IsInvited bool   `json:"isInvited"`
 	Nick      string `json:"nick"`
 	Status    int    `json:"status"`
-	UserID    int    `json:"userID"`
+	UserID    uint64 `json:"userID"`
 }
 
 type ResponseTournamentPlayers struct {
 	Code         int                `json:"code"`
-	AnalysisData string             `json:"analysis_data"`
-	CheckData    string             `json:"check_data"`
+	AnalysisData string             `json:"analysisData"`
+	CheckData    string             `json:"checkData"`
 	Message      string             `json:"message"`
 	Data         []TournamentPlayer `json:"data"`
 }
@@ -242,49 +242,56 @@ type ResponseTournamentLiveGame struct {
 }
 
 type Log struct {
-	GameMode    int          `json:"game_mode"`
-	HandRecords []HandRecord `json:"hand_records"`
-	InitPoints  int          `json:"init_points"`
-	KeyValue    string       `json:"key_value"`
-	NowTime     int          `json:"now_time"`
+	fangFu      int          `json:"fangFu"`
+	GameMode    int          `json:"gameMode"`
+	GamePlay    int          `json:"gamePlay"`
+	HandRecords []HandRecord `json:"handRecords"`
+	InitPoints  int          `json:"initPoints"`
+	KeyValue    string       `json:"keyValue"`
+	NowTime     int          `json:"nowTime"`
 	Remark      string       `json:"remark"`
+	RoomID      string       `json:"roomId"`
 }
 
 type HandRecord struct {
-	HonbaNum         int               `json:"honba_num"`
-	Round            int               `json:"round"`
-	WallString       string            `json:"wall_string"`
-	WallStringSHA256 string            `json:"wall_string_SHA256"`
-	HandEventRecords []HandEventRecord `json:"hand_event_records"`
-	HandIndex        int               `json:"hand_index"`
-	WallTiles        []int             `json:"wall_tiles"`
-	Players          []Player          `json:"players"`
-	RoundWind        int               `json:"round_wind"`
+	BenChangNum        int               `json:"benChangNum"`
+	ChangCi            int               `json:"changCi"`
+	HandPos            int               `json:"handPos"`
+	QuanFeng           int               `json:"quanFeng"`
+	HandCardEncode     string            `json:"handCardEncode"`
+	HandCardsSHA256    string            `json:"handCardsSHA256"`
+	HandID             string            `json:"handID"`
+	HandEventRecords   []HandEventRecord `json:"handEventRecord"`
+	PaiShan            []int             `json:"paiShan"`
+	Players            []Player          `json:"players"`
+	SymbolEventRequest []any             `json:"symbolEventRecord"`
 }
 
 type Player struct {
-	CardBackId         int    `json:"card_back_id"`
-	GameMusicId        int    `json:"game_music_id"`
-	HeadTag            int    `json:"head_tag"`
+	CardBackID         int    `json:"cardBackID"`
+	GameMusicId        int    `json:"gameMusicId"`
+	HandId             int    `json:"handId"`
+	HeadTag            int    `json:"headTag"`
 	Identity           int    `json:"identity"`
-	MatchMusicId       int    `json:"match_music_id"`
+	MatchMusicId       int    `json:"matchMusicId"`
 	Model              int    `json:"model"`
-	MortalModule       string `json:"mortal_module"`
+	MortalModule       string `json:"mortalModule"`
 	Nickname           string `json:"nickname"`
 	Points             int    `json:"points"`
 	Position           int    `json:"position"`
-	ProfileFrameId     int    `json:"profile_frame_id"`
-	RandGameMusicIds   []int  `json:"rand_game_music_ids"`
-	RandGameMusicModel int    `json:"rand_game_music_model"`
-	RiichiEffectId     int    `json:"riichi_effect_id"`
-	RiichiMusicId      int    `json:"riichi_music_id"`
-	RiichiStickId      int    `json:"riichi_stick_id"`
-	CharacterId        int    `json:"character_id"`
-	SkinId             int    `json:"skin_id"`
-	SpecialEffectId    int    `json:"special_effect_id"`
-	TableClothId       int    `json:"table_cloth_id"`
-	TitleId            int    `json:"title_id"`
-	UserId             int    `json:"user_id"`
+	ProfileFrameId     int    `json:"profileFrameId"`
+	RandGameMusicIds   []int  `json:"randGameMusicIDs"`
+	RandGameMusicModel int    `json:"randGameMusicModel"`
+	RiichiEffectId     int    `json:"riichiEffectId"`
+	RiichiMusicId      int    `json:"riichiMusicId"`
+	RiichiStickId      int    `json:"riichiStickID"`
+	RobotLevel         int    `json:"robotLevel"`
+	RoleID             int    `json:"roleID"`
+	SkinID             int    `json:"skinID"`
+	SpecialEffectID    int    `json:"specialEffectID"`
+	TableClothId       int    `json:"tableClothID"`
+	TitleId            int    `json:"titleID"`
+	UserTag            int    `json:"userTag"`
 }
 
 type HandEventRecord struct {
@@ -302,11 +309,12 @@ type HandEventRecord struct {
 	 * 10. **Pause** - Fires when a pause is issued.
 	 * 11. **Tenpai** - Fires when a player has tenpai.
 	 */
-	Data      any `json:"data"`
-	EventPos  int `json:"event_pos"`
-	EventType int `json:"event_type"`
-	StartTime int `json:"start_time"`
-	UserId    int `json:"user_id"`
+	Data      string `json:"data"`
+	EventPos  int    `json:"eventPos"`
+	EventType int    `json:"eventType"`
+	HandId    string `json:"handId"`
+	StartTime int    `json:"startTime"`
+	UserId    int    `json:"userId"`
 }
 
 type FindPlayer struct {
