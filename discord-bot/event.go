@@ -107,7 +107,6 @@ func (db *DiscordBot) EventStartTable(event *events.ApplicationCommandInteractio
 	match_id := data.String("table_id")
 
 	matchId, err := strconv.ParseUint(match_id, 10, 64)
-	fmt.Println(err.Error())
 
 	if err != nil {
 		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("Please to insert match id as number").SetEphemeral(true).Build())
