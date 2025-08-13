@@ -10,6 +10,19 @@ type TournamentBody struct {
 	EndAt        time.Time `json:"end_at"`
 	RegisterEnd  time.Time `json:"register_end"`
 	ClassifyID   string    `json:"classify_id"`
+	RoleID       string    `json:"role_id"`
+}
+
+type InputTournamentMatchPlayer struct {
+	PlayerId uint64 `json:"player_id"`
+	Score    int64  `json:"score"`
+}
+
+type TournamentMatchBody struct {
+	PaiPuId      string                       `json:"pai_pu_id"`
+	TournamentId uint64                       `json:"tournament_id"`
+	RoomID       string                       `json:"room_id"`
+	Players      []InputTournamentMatchPlayer `json:"players"`
 }
 
 type Pagination struct {

@@ -44,6 +44,7 @@ func (dg *DatabaseGame) CreateTournament(body TournamentBody) (*Tournament, erro
 		RegisterEnd: &body.RegisterEnd,
 		Active:      true,
 		ClassifyID:  body.ClassifyID,
+		RoleID:      body.RoleID,
 	}
 
 	if err = dg.db.Create(&tournament).Error; err != nil {

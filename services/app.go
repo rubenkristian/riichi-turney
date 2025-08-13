@@ -117,7 +117,7 @@ func (as *AppService) StartTable(tableId uint64) error {
 	return nil
 }
 
-func (as *AppService) FetchTournamentInfo(tournamentId uint64, registerEnd time.Time) (*database.Tournament, error) {
+func (as *AppService) FetchTournamentInfo(tournamentId uint64, registerEnd time.Time, roleID string) (*database.Tournament, error) {
 	tournament, err := as.RiichiCommand.FetchTournamentInfo(tournamentId)
 
 	if err != nil {
@@ -127,10 +127,11 @@ func (as *AppService) FetchTournamentInfo(tournamentId uint64, registerEnd time.
 	newTournament, err := as.DbGame.CreateTournament(database.TournamentBody{
 		Name:        tournament.MatchInfo.Name,
 		Description: tournament.MatchInfo.BriefIntroduction,
-		StartAt:     time.Unix(tournament.MatchInfo.StartTime),
-		EndAt:       time.Unix(tournament.MatchInfo.EndTime),
+		StartAt:     time.Unix(tournament.MatchInfo.StartTime, 0),
+		EndAt:       time.Unix(tournament.MatchInfo.EndTime, 0),
 		RegisterEnd: registerEnd,
 		ClassifyID:  tournament.ClassifyID,
+		RoleID:      roleID,
 	})
 
 	if err != nil {
@@ -160,15 +161,29 @@ func (as *AppService) FetchTournamentMatch(tournamentId uint64) error {
 			break
 		}
 
-		for tournamentMatch := range tournamentMatches {
-
+		for _, tournamentMatch := range tournamentMatches {
+			players := []database.InputTournamentMatchPlayer{}
+			for _, player := range tournamentMatch.Players {
+				players = append(players, database.InputTournamentMatchPlayer{
+					PlayerId: player.UserId,
+					Score:    player.Points,
+				})
+			}
+			as.DbGame.CreateTournamentMatch(database.TournamentMatchBody{
+				RoomID:       tournamentMatch.RoomID,
+				PaiPuId:      tournamentMatch.PaiPuId,
+				TournamentId: tournamentId,
+				Players:      players,
+			})
 		}
+
+		lastId += 20
 	}
 
 	return nil
 }
 
-func (as *AppService) FetchDetailTournamentMatch(paiPuId string) error {
+func (as *AppService) FetchDetailTournamentMatch(tournamentMatchId string, paiPuId string) error {
 	detailTournamentMatch, err := as.RiichiCommand.FetchLog(paiPuId)
 
 	if err != nil {
@@ -183,6 +198,22 @@ func (as *AppService) FetchDetailTournamentMatch(paiPuId string) error {
 	var data DataHandEvent
 
 	if err := json.Unmarshal([]byte(lastHandEventRecord.Data), &data); err != nil {
+		return err
+	}
+
+	for _, userData := range data.UserData {
+		if err := as.DbGame.UpdatePointTournamentMatchPlayer(tournamentMatchId, userData.UserID, userData.Score); err != nil {
+			continue
+		}
+	}
+
+	return nil
+}
+
+func (as *AppService) InputTournamentMatchPlayerPenalty(tournamentMatchPlayerId uint64, penalty int64) error {
+	penalty = penalty * 10
+
+	if err := as.DbGame.UpdateFinalPointTournamentMatchPlayer(tournamentMatchPlayerId, penalty); err != nil {
 		return err
 	}
 

@@ -9,6 +9,7 @@ type Tournament struct {
 	StartAt     time.Time  `json:"start_at"`
 	EndAt       time.Time  `json:"end_at"`
 	Active      bool       `json:"active"`
+	RoleID      string     `json:"role_id"`
 	RegisterEnd *time.Time `json:"register_end"`
 	ClassifyID  string     `json:"classify_id"`
 	CreatedAt   time.Time  `json:"created_at" gorm:"autoCreateTime"`
@@ -70,9 +71,8 @@ type PlayerMatch struct {
 }
 
 type TournamentMatch struct {
-	Id           uint64     `gorm:"primaryKey" json:"id"`
+	Id           string     `gorm:"primaryKey" json:"id"`
 	PaiPuId      string     `json:"pai_pu_id"`
-	RoomID       string     `json:"room_id"`
 	TournamentId uint64     `json:"tournament_id"`
 	CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
@@ -84,7 +84,7 @@ type TournamentMatch struct {
 
 type TournamentMatchPlayer struct {
 	Id                uint64 `gorm:"primaryKey" json:"id"`
-	TournamentMatchId uint64 `json:"tournament_match_id"`
+	TournamentMatchId string `json:"tournament_match_id"`
 	Score             int64  `json:"score"`
 	Point             int64  `json:"point"`
 	Penalty           int64  `json:"penalty"`

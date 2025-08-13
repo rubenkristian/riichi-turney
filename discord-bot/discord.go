@@ -22,6 +22,7 @@ type DiscordSetting struct {
 	Token         string
 	AdminId       []string
 	ServerId      string
+	ChannelAdmin  string
 	ChannelNotify string
 }
 
@@ -42,13 +43,15 @@ func CreateDiscordBot(dbGame *database.DatabaseGame, riichiCommand *riichicomman
 	}
 }
 
-func (db *DiscordBot) StartBot(token string, serverId string) error {
+func (db *DiscordBot) StartBot(token string, serverId string, channelAdmin string, channelNotify string) error {
 	if db.IsRunning {
 		return fmt.Errorf("discord bot already running")
 	}
 
 	db.Setting.Token = token
 	db.Setting.ServerId = serverId
+	db.Setting.ChannelAdmin = channelAdmin
+	db.Setting.ChannelNotify = channelNotify
 
 	client, err := disgo.New(
 		db.Setting.Token,
@@ -154,23 +157,20 @@ func (db *DiscordBot) onMessageInteract(event *events.MessageCreate) {
 func (db *DiscordBot) onEventInteract(event *events.ApplicationCommandInteractionCreate) {
 	data := event.SlashCommandInteractionData()
 
-	if data.CommandName() == "register" {
-		db.EventRegister(event)
-	}
-
-	if data.CommandName() == "start-table" {
+	switch data.CommandName() {
+	case "start-table":
 		db.EventStartTable(event)
-	}
 
-	if data.CommandName() == "check-table" {
+	case "check-table":
 		db.EventCheckTable(event)
-	}
 
-	if data.CommandName() == "schedule-time" {
+	case "register":
+		db.EventRegister(event)
+
+	case "schedule-time":
 		db.EventCheckSchedule(event)
-	}
 
-	if data.CommandName() == "check-point" {
+	case "check-point":
 		db.EventCheckPoint(event)
 	}
 }
@@ -187,9 +187,9 @@ func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCrea
 	case "confirm":
 		playerId, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
-			event.CreateMessage(
-				discord.NewMessageCreateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
-					SetEphemeral(true).
+			event.UpdateMessage(
+				discord.NewMessageUpdateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
+					SetContainerComponents().
 					Build(),
 			)
 			return
@@ -198,31 +198,32 @@ func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCrea
 		newRegister, err := db.DbGame.CreateRegisterTournament(playerId)
 
 		if err != nil {
-			event.CreateMessage(
-				discord.NewMessageCreateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
-					SetEphemeral(true).
+			event.UpdateMessage(
+				discord.NewMessageUpdateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
+					SetContainerComponents().
 					Build(),
 			)
 			return
 		}
 
 		db.Client.Rest().AddMemberRole(snowflake.MustParse(db.Setting.ServerId), event.User().ID, snowflake.MustParse(newRegister.Tournament.RoleID))
-		event.CreateMessage(
-			discord.NewMessageCreateBuilder().
+		event.UpdateMessage(
+			discord.NewMessageUpdateBuilder().
 				SetContent(fmt.Sprintf("✅ Registration success for %s.", newRegister.Player.RiichiCityName)).
-				SetEphemeral(true).Build(),
+				SetContainerComponents().
+				Build(),
 		)
 	case "cancel":
-		event.CreateMessage(
-			discord.NewMessageCreateBuilder().SetContent("❌ Registration cancelled").
-				SetEphemeral(true).
+		event.UpdateMessage(
+			discord.NewMessageUpdateBuilder().SetContent("❌ Registration cancelled").
+				SetContainerComponents().
 				Build(),
 		)
 
 	default:
-		event.CreateMessage(
-			discord.NewMessageCreateBuilder().SetContent("❌ no action for " + action).
-				SetEphemeral(true).
+		event.UpdateMessage(
+			discord.NewMessageUpdateBuilder().SetContent("❌ no action for " + action).
+				SetContainerComponents().
 				Build(),
 		)
 	}

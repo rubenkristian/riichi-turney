@@ -37,8 +37,33 @@ func (dg *DatabaseGame) DeleteMatch(matchId uint64) (bool, error) {
 	return true, nil
 }
 
+func (dg *DatabaseGame) UpdateStatusMatch(matchId uint64, status int) error {
+	result := dg.db.Model(&Match{}).Where("id = ?", matchId).Update("status", status)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("No rows updated")
+	} else {
+		return nil
+	}
+}
+
+func (dg *DatabaseGame) ListNotStartedMatch() ([]Match, error) {
+	var matches []Match
+	query := dg.db.Model(&Match{}).Where("status != ?", 1)
+
+	if err := query.Find(&matches).Error; err != nil {
+		return nil, err
+	}
+
+	return matches, nil
+}
+
 func (dg *DatabaseGame) ListMatch(match PaginationMatch) ([]Match, error) {
-	var matchs []Match
+	var matches []Match
 	query := dg.db.Model(&Match{})
 
 	if match.Pagination.Search != "" {
@@ -60,11 +85,11 @@ func (dg *DatabaseGame) ListMatch(match PaginationMatch) ([]Match, error) {
 		Limit(match.Pagination.Size).
 		Offset((max(match.Pagination.Page, 1) - 1) * match.Pagination.Size)
 
-	if err := query.Find(&matchs).Error; err != nil {
+	if err := query.Find(&matches).Error; err != nil {
 		return nil, err
 	}
 
-	return matchs, nil
+	return matches, nil
 }
 
 func (dg *DatabaseGame) ListMatchByPlayerId(playerId int, match PaginationMatch) ([]Match, error) {

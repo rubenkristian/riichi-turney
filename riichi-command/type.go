@@ -182,12 +182,12 @@ type Players struct {
 	Identity     int    `json:"identity"`
 	IsExistYiMan bool   `json:"isExistYiMan"`
 	Nickname     string `json:"nickname"`
-	Points       int    `json:"points"`
+	Points       int64  `json:"points"`
 	Rank         int    `json:"rank"`
 	RoleID       int    `json:"roleID"`
 	Serial       int    `json:"serial"`
 	SkinID       int    `json:"skinID"`
-	UserId       int    `json:"userId"`
+	UserId       uint64 `json:"userId"`
 }
 
 type ResponseTournameLogList struct {
