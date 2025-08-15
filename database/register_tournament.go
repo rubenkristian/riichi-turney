@@ -7,7 +7,7 @@ import (
 
 func (dg *DatabaseGame) GetRegisterTournamentPlayers(tournamentId uint64) ([]uint64, error) {
 	var ids []uint64
-	err := dg.db.Model(&RegisterTournament{}).Select("id").Where("tournament_id = ?", tournamentId).Pluck("id", &ids).Error
+	err := dg.db.Model(&RegisterTournament{}).Select("player_id").Where("tournament_id = ?", tournamentId).Pluck("player_id", &ids).Error
 
 	if err != nil {
 		return nil, err

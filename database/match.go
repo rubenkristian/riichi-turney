@@ -53,7 +53,7 @@ func (dg *DatabaseGame) UpdateStatusMatch(matchId uint64, status int) error {
 
 func (dg *DatabaseGame) ListNotStartedMatch() ([]Match, error) {
 	var matches []Match
-	query := dg.db.Model(&Match{}).Where("status != ?", 1)
+	query := dg.db.Preload("PlayerMatches.Player").Model(&Match{}).Where("status != ?", 1)
 
 	if err := query.Find(&matches).Error; err != nil {
 		return nil, err

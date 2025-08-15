@@ -127,33 +127,30 @@ func (db *DiscordBot) EventStartTable(event *events.ApplicationCommandInteractio
 
 	lobbyPlayers, err := db.RiichiCommand.FetchTournamentPlayers(match.TournamentId)
 
+	var playersMatch map[uint64]bool = map[uint64]bool{}
 	var playerReady []uint64 = []uint64{}
 	var playerNotReady []database.PlayerCheck = []database.PlayerCheck{}
 
-	idIndex := 0
+	for _, player := range match.PlayerMatches {
+		playersMatch[player.PlayerId] = false
+	}
 
 	for _, lobbyPlayer := range lobbyPlayers {
-		if lobbyPlayer.UserID == match.PlayerMatches[idIndex].PlayerId {
-			if lobbyPlayer.Status == 2 {
-				playerReady = append(playerReady, lobbyPlayer.UserID)
-			} else {
-				playerNotReady = append(playerNotReady, database.PlayerCheck{
-					RiichiId:  match.PlayerMatches[idIndex].PlayerId,
-					DiscordId: match.PlayerMatches[idIndex].Player.DiscordId,
-					Status:    lobbyPlayer.Status,
-				})
-			}
-			idIndex += 1
+		if _, ok := playersMatch[lobbyPlayer.UserID]; ok && lobbyPlayer.Status == 2 {
+			playersMatch[lobbyPlayer.UserID] = true
 		}
 	}
 
-	for idIndex < len(match.PlayerMatches) {
-		playerNotReady = append(playerNotReady, database.PlayerCheck{
-			RiichiId:  match.PlayerMatches[idIndex].PlayerId,
-			DiscordId: match.PlayerMatches[idIndex].Player.DiscordId,
-			Status:    -1,
-		})
-		idIndex += 1
+	for _, playerMatch := range match.PlayerMatches {
+		if playersMatch[playerMatch.PlayerId] {
+			playerReady = append(playerReady, playerMatch.PlayerId)
+		} else {
+			playerNotReady = append(playerNotReady, database.PlayerCheck{
+				RiichiId:  playerMatch.PlayerId,
+				DiscordId: playerMatch.Player.DiscordId,
+				Status:    -1,
+			})
+		}
 	}
 
 	if len(playerNotReady) > 0 {
@@ -173,11 +170,16 @@ func (db *DiscordBot) EventStartTable(event *events.ApplicationCommandInteractio
 			db.DbGame.UpdateStatusMatch(matchId, -1)
 			return
 		}
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("❌ Failed Start the match").SetEphemeral(true).Build())
+
+		return
 	}
 
 	stat, err := db.RiichiCommand.StartTournamentGame(match.TournamentId, playerReady, true)
 
-	if err != nil && !stat {
+	fmt.Println(stat)
+
+	if err != nil {
 		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("some player not ready, and message to notif player is error").SetEphemeral(true).Build())
 		return
 	}
@@ -200,15 +202,16 @@ func (db *DiscordBot) EventCheckTable(event *events.ApplicationCommandInteractio
 		return
 	}
 
-	list := "\nMatches not started:\n"
+	list := "\nPending Matches:\n"
 
 	for _, match := range matches {
 		players := ""
 
 		for id, player := range match.PlayerMatches {
-			players += fmt.Sprintf("- Player %d : %s\n", id+1, player.Player.DiscordName)
+			players += fmt.Sprintf("- Player %d : <@%d>\n", id+1, player.Player.DiscordId)
 		}
-		list += fmt.Sprintf("**Match %d:** %s\n", match.Id, players)
+		fmt.Println(players)
+		list += fmt.Sprintf("**Match (id: %d ):**\n %s", match.Id, players)
 	}
 
 	event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(list).Build())
@@ -227,17 +230,26 @@ func (db *DiscordBot) EventCheckPoint(event *events.ApplicationCommandInteractio
 	player, err := db.DbGame.GetPlayerByDiscordId(discordID)
 
 	if err != nil {
+		fmt.Println(err)
 		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("You riichi id not found").Build())
 		return
 	}
 
 	points, err := db.DbGame.PointsByPlayer(player.Id)
 
-	list := fmt.Sprintf("\n**Points**\n<@%d>", discordID)
+	if err != nil {
+		fmt.Println(err)
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(err.Error()).Build())
+		return
+	}
+
+	list := fmt.Sprintf("\n**Points** for <@%d>\n", discordID)
 
 	for _, point := range points {
 		list += fmt.Sprintf("point: %d | penalty: %d | final point: %d\n", point.Point, point.Penalty, point.FinalPoint)
 	}
+
+	fmt.Println(points)
 
 	event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(list).Build())
 }

@@ -9,20 +9,20 @@ import (
 )
 
 func (dg *DatabaseGame) GetTournament(id uint64) (*Tournament, error) {
-	var tournament *Tournament
+	var tournament Tournament
 	if id == 0 {
-		dg.db.Order("created_at desc").First(tournament)
+		dg.db.Order("created_at desc").First(&tournament)
 
-		return tournament, nil
+		return &tournament, nil
 	}
 
-	err := dg.db.First(tournament, id).Error
+	err := dg.db.First(&tournament, id).Error
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tournament, nil
+	return &tournament, nil
 }
 
 func (dg *DatabaseGame) CreateTournament(body TournamentBody) (*Tournament, error) {

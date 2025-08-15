@@ -163,7 +163,7 @@ type TournamentLogList struct {
 	IsClear       bool      `json:"isClear"`
 	IsCollect     bool      `json:"isCollect"`
 	IsMiddlePause bool      `json:"isMiddlePause"`
-	MatchStage    bool      `json:"matchStage"`
+	MatchStage    int       `json:"matchStage"`
 	MatchType     int       `json:"matchType"`
 	PaiPuId       string    `json:"paiPuId"`
 	PaiPuNotId    string    `json:"paiPuNotId"`

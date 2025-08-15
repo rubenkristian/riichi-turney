@@ -617,7 +617,7 @@ func (ra *RiichiApi) SendInvite(tournamentId uint64, players []uint64) error {
 
 	body, err := json.Marshal(map[string]any{
 		"isAdd":    true,
-		"matchID":  2,
+		"matchID":  tournamentId,
 		"usersID":  players,
 		"userType": 1,
 		"isReset":  false,

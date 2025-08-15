@@ -26,7 +26,7 @@ func (dg *DatabaseGame) CreateTournamentMatch(body TournamentMatchBody) (*Tourna
 	}
 
 	var existing TournamentMatch
-	err := dg.db.First(&existing, body.RoomID).Error
+	err := dg.db.First(&existing, "id = ?", body.RoomID).Error
 
 	if err == nil {
 		return nil, fmt.Errorf("an active tournament already exists")

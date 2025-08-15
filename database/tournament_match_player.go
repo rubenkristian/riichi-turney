@@ -4,7 +4,7 @@ import "fmt"
 
 func (dg *DatabaseGame) PointsByPlayer(playerId uint64) ([]TournamentMatchPlayer, error) {
 	var points []TournamentMatchPlayer
-	query := dg.db.Model(&TournamentMatchPlayer{}).Where("player_id != ?", playerId)
+	query := dg.db.Model(&TournamentMatchPlayer{}).Where("player_id = ?", playerId)
 
 	if err := query.Find(&points).Error; err != nil {
 		return nil, err

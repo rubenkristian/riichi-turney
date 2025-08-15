@@ -41,6 +41,7 @@ func (as *AppService) SendInvite(tournamentId uint64) error {
 	}
 
 	players, err := as.DbGame.GetRegisterTournamentPlayers(tournamentId)
+	fmt.Println(players)
 
 	if err != nil {
 		return err
@@ -125,13 +126,14 @@ func (as *AppService) FetchTournamentInfo(tournamentId uint64, registerEnd time.
 	}
 
 	newTournament, err := as.DbGame.CreateTournament(database.TournamentBody{
-		Name:        tournament.MatchInfo.Name,
-		Description: tournament.MatchInfo.BriefIntroduction,
-		StartAt:     time.Unix(tournament.MatchInfo.StartTime, 0),
-		EndAt:       time.Unix(tournament.MatchInfo.EndTime, 0),
-		RegisterEnd: registerEnd,
-		ClassifyID:  tournament.ClassifyID,
-		RoleID:      roleID,
+		Name:         tournament.MatchInfo.Name,
+		Description:  tournament.MatchInfo.BriefIntroduction,
+		StartAt:      time.Unix(tournament.MatchInfo.StartTime, 0),
+		EndAt:        time.Unix(tournament.MatchInfo.EndTime, 0),
+		RegisterEnd:  registerEnd,
+		ClassifyID:   tournament.ClassifyID,
+		RoleID:       roleID,
+		TournamentId: tournamentId,
 	})
 
 	if err != nil {
