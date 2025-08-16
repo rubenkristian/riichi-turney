@@ -191,6 +191,10 @@ func (ra *RiichiApi) fetchLogin() (int64, error) {
 		return 0, err
 	}
 
+	if loginData.Code != 0 {
+		return int64(loginData.Code), fmt.Errorf(loginData.Message)
+	}
+
 	body, err := json.MarshalIndent(loginData, "", " ")
 
 	if err != nil {

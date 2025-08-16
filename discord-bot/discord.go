@@ -179,8 +179,6 @@ func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCrea
 	parts := strings.SplitN(customID, ":", 2)
 	action := parts[0]
 
-	fmt.Println(customID)
-
 	switch action {
 	case "confirm":
 		playerId, err := strconv.ParseUint(parts[1], 10, 64)
@@ -194,7 +192,6 @@ func (db *DiscordBot) onComponentInteract(event *events.ComponentInteractionCrea
 		}
 
 		newRegister, err := db.DbGame.CreateRegisterTournament(playerId)
-
 		if err != nil {
 			event.UpdateMessage(
 				discord.NewMessageUpdateBuilder().SetContent(fmt.Sprintf("❌ Registration cancelled, %s", err.Error())).
