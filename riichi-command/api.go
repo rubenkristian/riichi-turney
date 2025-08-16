@@ -124,7 +124,14 @@ func (ra *RiichiApi) fetchSID() (string, error) {
 		return "", err
 	}
 
-	req.Header.Add("Cookies", fmt.Sprintf(`{"channel":"default","deviceid":"%s","lang":"en","version":"%s","platform":"pc"}`, ra.DeviceId, ra.Version))
+	req.Header.Add(
+		"Cookies",
+		fmt.Sprintf(
+			`{"channel":"default","deviceid":"%s","lang":"en","version":"%s","platform":"pc"}`,
+			ra.DeviceId,
+			ra.Version,
+		),
+	)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -150,13 +157,24 @@ func (ra *RiichiApi) fetchLogin() (int64, error) {
 		return 0, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/users/emailLogin", ra.Domain), bytes.NewBuffer(credential))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("https://%s/users/emailLogin", ra.Domain), bytes.NewBuffer(credential),
+	)
 
 	if err != nil {
 		return 0, err
 	}
 
-	req.Header.Add("Cookies", fmt.Sprintf(`{"channel":"default","deviceid":"%s","lang":"en","sid":"%s","version":"%s","platform":"pc"}`, ra.DeviceId, ra.Sid, ra.Version))
+	req.Header.Add(
+		"Cookies",
+		fmt.Sprintf(
+			`{"channel":"default","deviceid":"%s","lang":"en","sid":"%s","version":"%s","platform":"pc"}`,
+			ra.DeviceId,
+			ra.Sid,
+			ra.Version,
+		),
+	)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
@@ -188,8 +206,14 @@ func (ra *RiichiApi) fetchLogin() (int64, error) {
 
 func (ra *RiichiApi) refreshHeader() {
 	ra.DefaultHeader = map[string]string{
-		"User-Agent":      "UnityPlayer/2020.3.42f1c1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)",
-		"Cookies":         fmt.Sprintf(`{"channel":"default","lang":"en","deviceid":"%s","sid":"%s","uid":%d,"region":"cn","platform":"pc","version":"%s"}`, ra.DeviceId, ra.Sid, ra.Uid, ra.Version),
+		"User-Agent": "UnityPlayer/2020.3.42f1c1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)",
+		"Cookies": fmt.Sprintf(
+			`{"channel":"default","lang":"en","deviceid":"%s","sid":"%s","uid":%d,"region":"cn","platform":"pc","version":"%s"}`,
+			ra.DeviceId,
+			ra.Sid,
+			ra.Uid,
+			ra.Version,
+		),
 		"Content-Type":    "application/json",
 		"Accept":          "application/json",
 		"X-Unity-Version": "2021.3.38f1",
@@ -209,7 +233,14 @@ func (ra *RiichiApi) FetchTournamentInfo(turneyId uint64) (*TournamentInfo, erro
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/enterSelfBuild", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/lobbys/enterSelfBuild",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return nil, err
@@ -250,7 +281,14 @@ func (ra *RiichiApi) UpdateTournamentInfo(turneyId int, tournamentSetting Tourna
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/changeSelfCfg", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/lobbys/changeSelfCfg",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return false, err
@@ -291,7 +329,14 @@ func (ra *RiichiApi) FetchTournamentLogList(classifyId string, lastId int) ([]To
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/readPaiPuList", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/record/readPaiPuList",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return nil, err
@@ -331,7 +376,14 @@ func (ra *RiichiApi) FetchTournamentPlayers(tourneyId uint64) ([]TournamentPlaye
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/getSelfManageInfo", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/lobbys/getSelfManageInfo",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return nil, err
@@ -377,7 +429,14 @@ func (ra *RiichiApi) StartTournamentGame(tourneyId uint64, players []uint64, ran
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/allocateSelfUser", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/lobbys/allocateSelfUser",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return false, err
@@ -419,7 +478,14 @@ func (ra *RiichiApi) AdvStartTournamentGame(tourneyId int, players []int, scores
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/allocateSelfUser", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/lobbys/allocateSelfUser",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return false, err
@@ -458,7 +524,14 @@ func (ra *RiichiApi) FetchOngoingGames(classifyId string) ([]TournamentLiveGame,
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/readOnlineRoom", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/record/readOnlineRoom",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return nil, err
@@ -500,7 +573,14 @@ func (ra *RiichiApi) ManageTournamentGame(tourneyId int, roomId string, Type int
 		return false, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/controlSelfRoom", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/lobbys/controlSelfRoom",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return false, err
@@ -536,7 +616,14 @@ func (ra *RiichiApi) FetchLog(paifu string) (*Log, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/record/getRoomData", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/record/getRoomData",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return nil, err
@@ -577,7 +664,14 @@ func (ra *RiichiApi) FindPlayer(userId string) (*FindPlayer, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/mixed_client/findFriend", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/mixed_client/findFriend",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return nil, err
@@ -627,7 +721,14 @@ func (ra *RiichiApi) SendInvite(tournamentId uint64, players []uint64) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/lobbys/manageSelfUser", ra.Domain), bytes.NewBuffer(body))
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf(
+			"https://%s/lobbys/manageSelfUser",
+			ra.Domain,
+		),
+		bytes.NewBuffer(body),
+	)
 
 	if err != nil {
 		return err

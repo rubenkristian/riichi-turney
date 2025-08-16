@@ -236,7 +236,3 @@ func (db *DiscordBot) GetToken() string {
 func (db *DiscordBot) GetAdminId() []string {
 	return db.Setting.AdminId
 }
-
-// func (db *DiscordBot) CreateRoleTournament() {
-// 	role, err := db.Client.Rest().AddMemberRole()
-// }

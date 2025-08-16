@@ -23,6 +23,12 @@ func (dg *DatabaseGame) GetPlayerByDiscordId(id uint64) (*Player, error) {
 }
 
 func (dg *DatabaseGame) CreatePlayer(body PlayerBody) (*Player, error) {
+	playerExists, err := dg.GetPlayerByDiscordId(body.DiscordId)
+
+	if err == nil && playerExists != nil {
+		return nil, fmt.Errorf("Failed to register, this discord account already register")
+	}
+
 	player := &Player{
 		Id:             body.RiichiCityId,
 		DiscordName:    body.DiscordName,
@@ -30,9 +36,7 @@ func (dg *DatabaseGame) CreatePlayer(body PlayerBody) (*Player, error) {
 		DiscordId:      body.DiscordId,
 	}
 
-	err := dg.db.Create(player).Error
-
-	if err != nil {
+	if err := dg.db.Create(player).Error; err != nil {
 		return nil, err
 	}
 
