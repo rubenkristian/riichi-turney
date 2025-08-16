@@ -125,8 +125,6 @@ func (db *DiscordBot) StartBot(token string, serverId string, channelAdmin strin
 		}
 	}()
 
-	defer client.Close(context.Background())
-
 	db.Client = client
 	db.IsRunning = true
 	db.StartTime = time.Now().UnixMilli()

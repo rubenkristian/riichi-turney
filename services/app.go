@@ -20,7 +20,12 @@ type AppService struct {
 	DiscordSetting *discordbot.DiscordSetting
 }
 
-func StartAppService(dbGame *database.DatabaseGame, riichiCommand *riichicommand.RiichiApi, discordClient *bot.Client, discordSetting *discordbot.DiscordSetting) *AppService {
+func StartAppService(
+	dbGame *database.DatabaseGame,
+	riichiCommand *riichicommand.RiichiApi,
+	discordClient *bot.Client,
+	discordSetting *discordbot.DiscordSetting,
+) *AppService {
 	return &AppService{
 		DbGame:         dbGame,
 		RiichiCommand:  riichiCommand,
