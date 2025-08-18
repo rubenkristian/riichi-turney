@@ -1,6 +1,7 @@
 package database
 
-func (dg *DatabaseGame) CreatePlayerMatch() (PlayerMatch, error) {
+func (dg *DatabaseGame) CreatePlayerMatch(matchId uint64, playerId uint64) (PlayerMatch, error) {
+
 	return PlayerMatch{}, nil
 }
 

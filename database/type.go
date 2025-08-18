@@ -63,6 +63,15 @@ type MatchBody struct {
 	MatchName    string    `json:"match_name"`
 	Day          time.Time `json:"day"`
 	TournamentId uint64    `json:"tournament_id"`
+	Players      []uint64  `json:"players"`
+}
+
+type MatchBodyUpdate struct {
+	MatchName    string    `json:"match_name"`
+	Day          time.Time `json:"day"`
+	TournamentId uint64    `json:"tournament_id"`
+	MatchPlayers []uint64  `json:"match_players"`
+	Players      []uint64  `json:"players"`
 }
 
 type PaginationMatch struct {

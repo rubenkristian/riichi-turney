@@ -14,6 +14,17 @@ func (dg *DatabaseGame) CreateMatch(body MatchBody) (*Match, error) {
 		return nil, err
 	}
 
+	for _, player := range body.Players {
+		playerInsert := &PlayerMatch{
+			PlayerId: player,
+			MatchId:  match.Id,
+		}
+
+		if err := dg.db.Create(playerInsert).Error; err != nil {
+			return nil, err
+		}
+	}
+
 	return match, nil
 }
 
