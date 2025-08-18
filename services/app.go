@@ -67,34 +67,30 @@ func (as *AppService) StartTable(tableId uint64) error {
 	}
 
 	lobbyPlayers, err := as.RiichiCommand.FetchTournamentPlayers(match.TournamentId)
-
+	var playersMatch map[uint64]bool = map[uint64]bool{}
 	var playerReady []uint64 = []uint64{}
 	var playerNotReady []database.PlayerCheck = []database.PlayerCheck{}
 
-	idIndex := 0
+	for _, player := range match.PlayerMatches {
+		playersMatch[player.PlayerId] = false
+	}
 
 	for _, lobbyPlayer := range lobbyPlayers {
-		if lobbyPlayer.UserID == match.PlayerMatches[idIndex].PlayerId {
-			if lobbyPlayer.Status == 2 {
-				playerReady = append(playerReady, lobbyPlayer.UserID)
-			} else {
-				playerNotReady = append(playerNotReady, database.PlayerCheck{
-					RiichiId:  match.PlayerMatches[idIndex].PlayerId,
-					DiscordId: match.PlayerMatches[idIndex].Player.DiscordId,
-					Status:    lobbyPlayer.Status,
-				})
-			}
-			idIndex += 1
+		if _, ok := playersMatch[lobbyPlayer.UserID]; ok && lobbyPlayer.Status == 2 {
+			playersMatch[lobbyPlayer.UserID] = true
 		}
 	}
 
-	for idIndex < len(match.PlayerMatches) {
-		playerNotReady = append(playerNotReady, database.PlayerCheck{
-			RiichiId:  match.PlayerMatches[idIndex].PlayerId,
-			DiscordId: match.PlayerMatches[idIndex].Player.DiscordId,
-			Status:    -1,
-		})
-		idIndex += 1
+	for _, playerMatch := range match.PlayerMatches {
+		if playersMatch[playerMatch.PlayerId] {
+			playerReady = append(playerReady, playerMatch.PlayerId)
+		} else {
+			playerNotReady = append(playerNotReady, database.PlayerCheck{
+				RiichiId:  playerMatch.PlayerId,
+				DiscordId: playerMatch.Player.DiscordId,
+				Status:    -1,
+			})
+		}
 	}
 
 	if len(playerNotReady) > 0 {
@@ -106,12 +102,15 @@ func (as *AppService) StartTable(tableId uint64) error {
 		content := "The following players, please get ready in the tournament lobby — the match is about to start!\n\n" + mentions
 		_, err := as.DiscordClient.Rest().CreateMessage(
 			snowflake.MustParse(as.DiscordSetting.ChannelNotify),
-			discord.NewMessageCreateBuilder().SetContent(content).Build(),
+			discord.NewMessageCreateBuilder().SetContent(content).SetEphemeral(true).Build(),
 		)
 
 		if err != nil {
+			as.DbGame.UpdateStatusMatch(tableId, -1)
 			return fmt.Errorf("some player not ready, and message to notif player is error")
 		}
+
+		return fmt.Errorf("Failed to start the match")
 	}
 
 	stat, err := as.RiichiCommand.StartTournamentGame(match.TournamentId, playerReady, true)
