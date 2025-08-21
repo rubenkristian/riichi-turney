@@ -56,11 +56,6 @@ func CreateRiichiApi(dbGame *database.DatabaseGame) *RiichiApi {
 }
 
 func (ra *RiichiApi) SetupRiichi(mainHost string, email string, password string) error {
-	if ra.loadSession() {
-		ra.IsLoggedIn = true
-		ra.refreshHeader()
-		return nil
-	}
 
 	domain, err := ra.getDomain(mainHost)
 
@@ -117,6 +112,16 @@ func (ra *RiichiApi) saveSession() {
 
 	data, _ := json.MarshalIndent(session, "", "  ")
 	_ = os.WriteFile(ra.SessionFile, data, 0600)
+}
+
+func (ra *RiichiApi) CheckSession() bool {
+	if ra.loadSession() {
+		ra.IsLoggedIn = true
+		ra.refreshHeader()
+		return true
+	}
+
+	return false
 }
 
 func (ra *RiichiApi) loadSession() bool {
