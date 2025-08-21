@@ -10,9 +10,10 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"os"
-	"time"
+	"path/filepath"
 
 	"github.com/rubenkristian/riichi-turney/database"
+	"github.com/rubenkristian/riichi-turney/utils"
 )
 
 type RiichiApi struct {
@@ -25,21 +26,42 @@ type RiichiApi struct {
 	Credential    Credential
 	IsLoggedIn    bool
 	DbGame        *database.DatabaseGame
+	ConfigDir     string
+	SessionFile   string
+}
+
+type Session struct {
+	DeviceId string `json:"device_id"`
+	Domain   string `json:"domain"`
+	Sid      string `json:"sid"`
+	Uid      int64  `json:"uid"`
+	Version  string `json:"version"`
 }
 
 type SIDResponse struct {
 }
 
 func CreateRiichiApi(dbGame *database.DatabaseGame) *RiichiApi {
+	cfgDir, _ := utils.GetConfigDir("riichi-bot")
+	os.MkdirAll(cfgDir, 0755)
+
 	return &RiichiApi{
-		DbGame:     dbGame,
-		IsLoggedIn: false,
-		Version:    "1.1.4.11030",
-		DeviceId:   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+		DbGame:      dbGame,
+		IsLoggedIn:  false,
+		Version:     "1.1.4.11030",
+		DeviceId:    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+		ConfigDir:   cfgDir,
+		SessionFile: filepath.Join(cfgDir, "session.json"),
 	}
 }
 
 func (ra *RiichiApi) SetupRiichi(mainHost string, email string, password string) error {
+	if ra.loadSession() {
+		ra.IsLoggedIn = true
+		ra.refreshHeader()
+		return nil
+	}
+
 	domain, err := ra.getDomain(mainHost)
 
 	if err != nil {
@@ -72,12 +94,7 @@ func (ra *RiichiApi) getDomain(mainHost string) (string, error) {
 		return "", err
 	}
 
-	// Optional: ensure temp folder exists
-	if err := os.MkdirAll("./temp", 0755); err != nil {
-		return "", err
-	}
-
-	if err := os.WriteFile("./temp/domain.json", body, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(ra.ConfigDir, "./domain.json"), body, 0644); err != nil {
 		return "", err
 	}
 
@@ -87,6 +104,38 @@ func (ra *RiichiApi) getDomain(mainHost string) (string, error) {
 	}
 
 	return domain.DomainName, nil
+}
+
+func (ra *RiichiApi) saveSession() {
+	session := Session{
+		DeviceId: ra.DeviceId,
+		Domain:   ra.Domain,
+		Sid:      ra.Sid,
+		Uid:      ra.Uid,
+		Version:  ra.Version,
+	}
+
+	data, _ := json.MarshalIndent(session, "", "  ")
+	_ = os.WriteFile(ra.SessionFile, data, 0600)
+}
+
+func (ra *RiichiApi) loadSession() bool {
+	data, err := os.ReadFile(ra.SessionFile)
+	if err != nil {
+		return false
+	}
+
+	var session Session
+	if err := json.Unmarshal(data, &session); err != nil {
+		return false
+	}
+
+	ra.DeviceId = session.DeviceId
+	ra.Domain = session.Domain
+	ra.Sid = session.Sid
+	ra.Uid = session.Uid
+	ra.Version = session.Version
+	return true
 }
 
 func (ra *RiichiApi) login() error {
@@ -107,6 +156,8 @@ func (ra *RiichiApi) login() error {
 	ra.IsLoggedIn = true
 	ra.refreshHeader()
 
+	ra.saveSession()
+
 	return nil
 }
 
@@ -115,6 +166,8 @@ func (ra *RiichiApi) logout() {
 	ra.Uid = 0
 	ra.IsLoggedIn = false
 	ra.refreshHeader()
+
+	_ = os.Remove(ra.SessionFile)
 }
 
 func (ra *RiichiApi) fetchSID() (string, error) {
@@ -201,7 +254,7 @@ func (ra *RiichiApi) fetchLogin() (int64, error) {
 		return 0, err
 	}
 
-	if err := os.WriteFile(fmt.Sprintf("./temp/user-%d.json", time.Now().UnixNano()), body, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(ra.ConfigDir, fmt.Sprintf("./user-%d.json", loginData.Data.User.Id)), body, 0644); err != nil {
 		return 0, err
 	}
 

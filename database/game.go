@@ -1,6 +1,10 @@
 package database
 
 import (
+	"os"
+	"path/filepath"
+
+	"github.com/rubenkristian/riichi-turney/utils"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -10,7 +14,10 @@ type DatabaseGame struct {
 }
 
 func CreateDatabaseGame() (*DatabaseGame, error) {
-	db, err := gorm.Open(sqlite.Open("./turney.db"), &gorm.Config{})
+	cfgDir, _ := utils.GetConfigDir("riichi-bot")
+	os.MkdirAll(cfgDir, 0755)
+
+	db, err := gorm.Open(sqlite.Open(filepath.Join(cfgDir, "./turney.db")), &gorm.Config{})
 
 	if err != nil {
 		return nil, err
