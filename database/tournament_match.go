@@ -74,9 +74,9 @@ func (dg *DatabaseGame) CreateTournamentMatch(body TournamentMatchBody) (*Tourna
 	return &loadedTournamentMatch, nil
 }
 
-func (dg *DatabaseGame) ListTournamentMatch(tournament PaginationTournament) ([]TournamentMatch, error) {
+func (dg *DatabaseGame) ListTournamentMatch(tournamentId uint64, tournament PaginationTournament) ([]TournamentMatch, error) {
 	var tournamentMatches []TournamentMatch
-	query := dg.db.Model(&Tournament{})
+	query := dg.db.Preload("Tournament").Preload("TournamentMatchPlayers.Player").Model(&Tournament{}).Where("tournament_id = ?", tournamentId)
 
 	if tournament.FromDate != nil && tournament.ToDate != nil {
 		query = query.Where("created_at BETWEEN ? AND ?", tournament.FromDate, tournament.ToDate)
