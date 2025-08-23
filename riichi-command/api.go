@@ -698,12 +698,9 @@ func (ra *RiichiApi) FetchLog(paifu string) (*Log, error) {
 	client := &http.Client{}
 	res, err := client.Do(req)
 
-	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(string(bodyBytes))
 
 	if err != nil {
 		return nil, err

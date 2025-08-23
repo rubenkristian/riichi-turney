@@ -245,7 +245,7 @@ type Log struct {
 	fangFu      int          `json:"fangFu"`
 	GameMode    int          `json:"gameMode"`
 	GamePlay    int          `json:"gamePlay"`
-	HandRecords []HandRecord `json:"handRecords"`
+	HandRecords []HandRecord `json:"handRecord"`
 	InitPoints  int          `json:"initPoints"`
 	KeyValue    string       `json:"keyValue"`
 	NowTime     int          `json:"nowTime"`
@@ -254,11 +254,8 @@ type Log struct {
 }
 
 type ResponseLog struct {
-	Code         int    `json:"code"`
-	AnalysisData string `json:"analysis_data"`
-	CheckData    string `json:"check_data"`
-	Message      string `json:"message"`
-	Data         Log    `json:"data"`
+	Code int `json:"code"`
+	Data Log `json:"data"`
 }
 
 type HandRecord struct {
