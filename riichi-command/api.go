@@ -698,18 +698,25 @@ func (ra *RiichiApi) FetchLog(paifu string) (*Log, error) {
 	client := &http.Client{}
 	res, err := client.Do(req)
 
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(string(bodyBytes))
+
 	if err != nil {
 		return nil, err
 	}
 
 	defer res.Body.Close()
 
-	var log Log
-	if err := json.NewDecoder(res.Body).Decode(&log); err != nil {
+	var responseLog ResponseLog
+	if err := json.NewDecoder(res.Body).Decode(&responseLog); err != nil {
 		return nil, err
 	}
 
-	return &log, nil
+	return &responseLog.Data, nil
 }
 
 func (ra *RiichiApi) FindPlayer(userId string) (*FindPlayer, error) {

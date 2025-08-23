@@ -253,6 +253,14 @@ type Log struct {
 	RoomID      string       `json:"roomId"`
 }
 
+type ResponseLog struct {
+	Code         int    `json:"code"`
+	AnalysisData string `json:"analysis_data"`
+	CheckData    string `json:"check_data"`
+	Message      string `json:"message"`
+	Data         Log    `json:"data"`
+}
+
 type HandRecord struct {
 	BenChangNum        int               `json:"benChangNum"`
 	ChangCi            int               `json:"changCi"`
