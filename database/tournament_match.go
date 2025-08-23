@@ -11,7 +11,7 @@ import (
 func (dg *DatabaseGame) GetTournamentMatchById(id string) (*TournamentMatch, error) {
 	var tournamentMatch TournamentMatch
 
-	if err := dg.db.Preload("Tournament").Preload("TournamentMatchPlayers").First(&tournamentMatch, id).Error; err != nil {
+	if err := dg.db.Preload("Tournament").Preload("TournamentMatchPlayers").First(&tournamentMatch, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 
