@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-func (dg *DatabaseGame) ListRegisterTournamentPlayers(pagination Pagination) ([]RegisterTournament, error) {
+func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, pagination Pagination) ([]RegisterTournament, error) {
 	var registeredTournament []RegisterTournament
-	query := dg.db.Preload("Player").Preload("Tournament").Model(&RegisterTournament{})
+	query := dg.db.Preload("Player").Preload("Tournament").Model(&RegisterTournament{}).Where("tournament_id = ?", tournamentId)
 
 	// Whitelist sort fields
 	allowedSortBy := map[string]bool{"id": true, "created_at": true}
