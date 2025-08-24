@@ -6,6 +6,20 @@ import (
 	"time"
 )
 
+func (dg *DatabaseGame) SyncPointTournamentPlayerRegister(tournamentId uint64) error {
+	sql := `
+        UPDATE register_tournaments rt
+        SET point = COALESCE((
+            SELECT SUM(tmp.final_point)
+            FROM tournament_match_players tmp
+            JOIN tournament_matches tm ON tm.id = tmp.tournament_match_id
+            WHERE tmp.player_id = rt.player_id
+              AND tm.tournament_id = rt.tournament_id
+        ), 0)
+    `
+	return dg.db.Exec(sql).Error
+}
+
 func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, search string, pagination Pagination) ([]RegisterTournament, error) {
 	var registeredTournament []RegisterTournament
 	query := dg.db.Preload("Player").Preload("Tournament").Model(&RegisterTournament{}).Where("tournament_id = ?", tournamentId)
@@ -16,7 +30,7 @@ func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, searc
 	}
 
 	// Whitelist sort fields
-	allowedSortBy := map[string]bool{"id": true, "created_at": true}
+	allowedSortBy := map[string]bool{"id": true, "created_at": true, "point": true}
 	if !allowedSortBy[pagination.SortBy] {
 		pagination.SortBy = "id"
 	}

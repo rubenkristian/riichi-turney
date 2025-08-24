@@ -75,17 +75,16 @@ func (dg *DatabaseGame) ListMatch(tournamentId uint64, match PaginationMatch) ([
 	var matches []Match
 	query := dg.db.Preload("Tournament").Preload("PlayerMatches.Player").Model(&Match{}).Where("tournament_id = ?", tournamentId)
 
-	if match.Pagination.Search != "" {
-		searchQuery := fmt.Sprintf("%%%s%%", match.Pagination.Search)
-		query = query.Where("match_name LIKE ?", searchQuery)
-	}
-
 	if match.Pagination.SortBy == "" {
 		match.Pagination.SortBy = "id"
 	}
 
 	if match.Pagination.Sort == "" {
 		match.Pagination.Sort = "ASC"
+	}
+
+	if match.Status != nil {
+		query = query.Where("status = ?", match.Status)
 	}
 
 	query = query.Order(

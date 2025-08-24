@@ -78,6 +78,7 @@ type PaginationMatch struct {
 	Pagination Pagination
 	FromDate   *string
 	ToDate     *string
+	Status     *int
 }
 
 type PlayerCheck struct {
