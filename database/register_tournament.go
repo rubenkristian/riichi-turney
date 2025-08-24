@@ -40,10 +40,16 @@ func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, searc
 	    )
 	`)
 
-	// Whitelist sort fields
-	allowedSortBy := map[string]bool{"id": true, "created_at": true, "point": true}
-	if !allowedSortBy[pagination.SortBy] {
-		pagination.SortBy = "id"
+	// map user input -> real DB column
+	allowedSortBy := map[string]string{
+		"id":         "register_tournaments.id",
+		"created_at": "register_tournaments.created_at",
+		"point":      "register_tournaments.point",
+	}
+
+	sortBy, ok := allowedSortBy[pagination.SortBy]
+	if !ok {
+		sortBy = "register_tournaments.id"
 	}
 
 	if strings.ToUpper(pagination.Sort) != "DESC" {
@@ -56,7 +62,7 @@ func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, searc
 	}
 	offset := (page - 1) * pagination.Size
 
-	query = query.Order(fmt.Sprintf("%s %s", pagination.SortBy, pagination.Sort)).
+	query = query.Order(fmt.Sprintf("%s %s", sortBy, pagination.Sort)).
 		Limit(pagination.Size).
 		Offset(offset)
 
