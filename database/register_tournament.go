@@ -12,7 +12,7 @@ func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, searc
 
 	if search != "" {
 		query = query.Joins("JOIN players ON players.id = register_tournaments.player_id").
-			Where("players.name LIKE ?", "%"+search+"%")
+			Where("players.riichi_city_name LIKE ?", "%"+search+"%")
 	}
 
 	// Whitelist sort fields
