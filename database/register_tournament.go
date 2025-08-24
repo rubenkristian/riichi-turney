@@ -20,7 +20,7 @@ func (dg *DatabaseGame) SyncPointTournamentPlayerRegister(tournamentId uint64) e
 	return dg.db.Exec(sql).Error
 }
 
-func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, search string, pagination Pagination) ([]RegisterTournament, error) {
+func (dg *DatabaseGame) ListRegisterTournamentPlayers(isMatch bool, tournamentId uint64, search string, pagination Pagination) ([]RegisterTournament, error) {
 	var registeredTournament []RegisterTournament
 	query := dg.db.Preload("Player").Preload("Tournament").Model(&RegisterTournament{}).Where("tournament_id = ?", tournamentId)
 
@@ -29,16 +29,18 @@ func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, searc
 			Where("players.riichi_city_name LIKE ?", "%"+search+"%")
 	}
 
-	query = query.Where(`
-	    NOT EXISTS (
-	        SELECT 1
-	        FROM player_matches pm
-	        JOIN matches m ON m.id = pm.match_id
-	        WHERE pm.player_id = register_tournaments.player_id
-	          AND m.tournament_id = register_tournaments.tournament_id
-	          AND m.status != 1
-	    )
-	`)
+	if isMatch {
+		query = query.Where(`
+		    NOT EXISTS (
+		        SELECT 1
+		        FROM player_matches pm
+		        JOIN matches m ON m.id = pm.match_id
+		        WHERE pm.player_id = register_tournaments.player_id
+		          AND m.tournament_id = register_tournaments.tournament_id
+		          AND m.status != 1
+		    )
+		`)
+	}
 
 	// map user input -> real DB column
 	allowedSortBy := map[string]string{
