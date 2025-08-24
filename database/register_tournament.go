@@ -29,6 +29,17 @@ func (dg *DatabaseGame) ListRegisterTournamentPlayers(tournamentId uint64, searc
 			Where("players.riichi_city_name LIKE ?", "%"+search+"%")
 	}
 
+	query = query.Where(`
+	    NOT EXISTS (
+	        SELECT 1
+	        FROM player_matches pm
+	        JOIN matches m ON m.id = pm.match_id
+	        WHERE pm.player_id = register_tournaments.player_id
+	          AND m.tournament_id = register_tournaments.tournament_id
+	          AND m.status != 1
+	    )
+	`)
+
 	// Whitelist sort fields
 	allowedSortBy := map[string]bool{"id": true, "created_at": true, "point": true}
 	if !allowedSortBy[pagination.SortBy] {
