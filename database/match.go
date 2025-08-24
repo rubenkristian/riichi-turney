@@ -8,9 +8,7 @@ func (dg *DatabaseGame) CreateMatch(body MatchBody) (*Match, error) {
 		Status:       0,
 	}
 
-	err := dg.db.Create(match).Error
-
-	if err != nil {
+	if err := dg.db.Create(match).Error; err != nil {
 		return nil, err
 	}
 
@@ -73,9 +71,9 @@ func (dg *DatabaseGame) ListNotStartedMatch() ([]Match, error) {
 	return matches, nil
 }
 
-func (dg *DatabaseGame) ListMatch(match PaginationMatch) ([]Match, error) {
+func (dg *DatabaseGame) ListMatch(tournamentId uint64, match PaginationMatch) ([]Match, error) {
 	var matches []Match
-	query := dg.db.Model(&Match{})
+	query := dg.db.Preload("Tournament").Preload("PlayerMatches.Player").Model(&Match{}).Where("tournament_id = ?", tournamentId)
 
 	if match.Pagination.Search != "" {
 		searchQuery := fmt.Sprintf("%%%s%%", match.Pagination.Search)
@@ -103,7 +101,7 @@ func (dg *DatabaseGame) ListMatch(match PaginationMatch) ([]Match, error) {
 	return matches, nil
 }
 
-func (dg *DatabaseGame) ListMatchByPlayerId(playerId int, match PaginationMatch) ([]Match, error) {
+func (dg *DatabaseGame) ListMatchByPlayerId(tournamentId uint64, playerId uint64, match PaginationMatch) ([]Match, error) {
 	var matchs []Match
 	query := dg.db.Model(&Match{}).Where("player_id = ?", playerId)
 

@@ -25,6 +25,7 @@ type RegisterTournament struct {
 	Id           uint64     `gorm:"primaryKey" json:"id"`
 	PlayerId     uint64     `json:"player_id"`
 	TournamentId uint64     `json:"tournament_id"`
+	Point        int64      `json:"point"`
 	CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt    *time.Time `json:"deleted_at" gorm:"index"`
@@ -90,6 +91,7 @@ type TournamentMatchPlayer struct {
 	Penalty           int64  `json:"penalty"`
 	FinalPoint        int64  `json:"final_point"`
 	PlayerId          uint64 `json:"player_id"`
+	Status            bool   `json:"status"`
 
 	Player Player `gorm:"foreignKey:player_id"`
 }

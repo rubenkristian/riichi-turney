@@ -166,7 +166,7 @@ func (ra *RiichiApi) login() error {
 	return nil
 }
 
-func (ra *RiichiApi) logout() {
+func (ra *RiichiApi) Logout() {
 	ra.Sid = ""
 	ra.Uid = 0
 	ra.IsLoggedIn = false
