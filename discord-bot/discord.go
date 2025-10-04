@@ -106,6 +106,10 @@ func (db *DiscordBot) StartBot(token string, serverId string, channelAdmin strin
 			},
 		},
 		discord.SlashCommandCreate{
+			Name:        "start-table-random",
+			Description: "start table with random players with ready status",
+		},
+		discord.SlashCommandCreate{
 			Name:        "schedule-time",
 			Description: "get detail schedule time",
 		},
@@ -158,6 +162,9 @@ func (db *DiscordBot) onEventInteract(event *events.ApplicationCommandInteractio
 	switch data.CommandName() {
 	case "start-table":
 		db.EventStartTable(event)
+
+	case "start-table-random":
+		db.EventStartTableRandom(event)
 
 	case "check-table":
 		db.EventCheckTable(event)

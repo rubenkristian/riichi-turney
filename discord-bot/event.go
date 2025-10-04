@@ -95,6 +95,47 @@ func (db *DiscordBot) EventRegister(event *events.ApplicationCommandInteractionC
 	)
 }
 
+func (db *DiscordBot) EventStartTableRandom(event *events.ApplicationCommandInteractionCreate) {
+	if uint64(event.Channel().ID()) != uint64(snowflake.MustParse(db.Setting.ChannelAdmin)) {
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("Not Allowed").SetEphemeral(true).Build())
+		return
+	}
+
+	tournament, err := db.DbGame.GetTournament(0)
+
+	if err != nil {
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(err.Error()).SetEphemeral(true).Build())
+		return
+	}
+
+	lobbyPlayers, err := db.RiichiCommand.FetchTournamentPlayers(tournament.Id)
+
+	if err != nil {
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(err.Error()).SetEphemeral(true).Build())
+		return
+	}
+
+	var playerReady []uint64 = []uint64{}
+
+	for _, lobbyPlayer := range lobbyPlayers {
+		if lobbyPlayer.Status == 2 {
+			playerReady = append(playerReady, lobbyPlayer.UserID)
+		}
+	}
+
+	if len(playerReady) < 4 {
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("cannot start table, need 4 player to ready").SetEphemeral(true).Build())
+	}
+
+	stat, err := db.RiichiCommand.StartTournamentGame(tournament.Id, playerReady, true)
+
+	if err != nil && !stat {
+		event.CreateMessage(discord.NewMessageCreateBuilder().SetContent(err.Error()).SetEphemeral(true).Build())
+	}
+
+	event.CreateMessage(discord.NewMessageCreateBuilder().SetContent("✅ Success Start the match").SetEphemeral(true).Build())
+}
+
 // handle when command /start-table selected
 func (db *DiscordBot) EventStartTable(event *events.ApplicationCommandInteractionCreate) {
 	if uint64(event.Channel().ID()) != uint64(snowflake.MustParse(db.Setting.ChannelAdmin)) {

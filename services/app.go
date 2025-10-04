@@ -59,6 +59,34 @@ func (as *AppService) SendInvite(tournamentId uint64) error {
 	return nil
 }
 
+func (as *AppService) StartTableRandom(tournamentId uint64) error {
+	lobbyPlayers, err := as.RiichiCommand.FetchTournamentPlayers(tournamentId)
+
+	if err != nil {
+		return err
+	}
+
+	var playerReady []uint64 = []uint64{}
+
+	for _, lobbyPlayer := range lobbyPlayers {
+		if lobbyPlayer.Status == 2 {
+			playerReady = append(playerReady, lobbyPlayer.UserID)
+		}
+	}
+
+	if len(playerReady) < 4 {
+		return fmt.Errorf("cannot start table, need 4 player to ready")
+	}
+
+	stat, err := as.RiichiCommand.StartTournamentGame(tournamentId, playerReady, true)
+
+	if err != nil && !stat {
+		return fmt.Errorf("some player not ready, and message to notif player is error")
+	}
+
+	return nil
+}
+
 func (as *AppService) StartTable(tableId uint64) error {
 	match, err := as.DbGame.GetMatchById(tableId)
 
