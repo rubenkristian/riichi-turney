@@ -120,3 +120,38 @@ func (dg *DatabaseGame) CreateRegisterTournament(playerId uint64) (*RegisterTour
 
 	return &registerTournament, nil
 }
+
+func (dg *DatabaseGame) CreateRegisterTournamentById(playerId uint64, tournamentId uint64) (*RegisterTournament, error) {
+	var tournament Tournament
+
+	err := dg.db.Where("id = ?", tournamentId).First(&tournament).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	if tournament.RegisterEnd != nil && time.Now().Compare(*tournament.RegisterEnd) == 1 {
+		return nil, fmt.Errorf("cannot register to this tournament, tournament registration already end")
+	}
+
+	var exist RegisterTournament
+
+	if err := dg.db.Where("tournament_id = ? AND player_id = ?", tournament.Id, playerId).First(&exist).Error; err == nil {
+		return nil, fmt.Errorf("this player already registered")
+	}
+
+	registerTournament := RegisterTournament{
+		PlayerId:     playerId,
+		TournamentId: tournament.Id,
+	}
+
+	if err := dg.db.Create(&registerTournament).Error; err != nil {
+		return nil, err
+	}
+
+	if err := dg.db.Preload("Player").Preload("Tournament").First(&registerTournament, registerTournament.Id).Error; err != nil {
+		return nil, err
+	}
+
+	return &registerTournament, nil
+}
